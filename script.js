@@ -4,117 +4,115 @@
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
+/* theme lives on <html> so the loader matches before first paint */
+const applyTheme = (theme) => {
+  document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+};
+
 /* App State */
 const state = {
   theme: localStorage.getItem('oxy_theme') || 'light',
   clock24h: localStorage.getItem('oxy_clock_24h') !== 'false',
-  searchEngine: 'google', // google, duckduckgo, github, youtube, wikipedia
+  searchEngine: 'google', // google, duckduckgo, github, youtube
   bgBaseOpacity: parseFloat(localStorage.getItem('oxy_bg_base')) || 0.22,
   bgHoverOpacity: parseFloat(localStorage.getItem('oxy_bg_hover')) || 0.85,
   bgSpacing: parseInt(localStorage.getItem('oxy_bg_spacing')) || 24,
   shortcuts: JSON.parse(localStorage.getItem('oxy_shortcuts')) || [
-    { id: '1', title: 'GitHub', url: 'https://github.com', key: '1', icon: 'GH' },
-    { id: '2', title: 'YouTube', url: 'https://youtube.com', key: '2', icon: 'YT' },
-    { id: '3', title: 'Reddit', url: 'https://reddit.com', key: '3', icon: 'RD' },
-    { id: '4', title: 'ChatGPT', url: 'https://chatgpt.com', key: '4', icon: 'AI' },
-    { id: '5', title: 'Gmail', url: 'https://mail.google.com', key: '5', icon: 'M' },
-    { id: '6', title: 'Vercel', url: 'https://vercel.com', key: '6', icon: 'VC' },
-    { id: '7', title: 'Figma', url: 'https://figma.com', key: '7', icon: 'FG' },
-    { id: '8', title: 'X / Twitter', url: 'https://x.com', key: '8', icon: 'X' }
+    { id: '1', title: 'github', url: 'https://github.com', key: '1', icon: 'gh' },
+    { id: '2', title: 'youtube', url: 'https://youtube.com', key: '2', icon: 'yt' },
+    { id: '3', title: 'reddit', url: 'https://reddit.com', key: '3', icon: 'rd' },
+    { id: '4', title: 'chatgpt', url: 'https://chatgpt.com', key: '4', icon: 'ai' },
+    { id: '5', title: 'gmail', url: 'https://mail.google.com', key: '5', icon: 'gm' },
+    { id: '6', title: 'vercel', url: 'https://vercel.com', key: '6', icon: 'vc' },
+    { id: '7', title: 'figma', url: 'https://figma.com', key: '7', icon: 'fg' },
+    { id: '8', title: 'x', url: 'https://x.com', key: '8', icon: 'x' }
   ]
 };
 
-/* ── 1. ENTRANCE DIAGONAL WAVE LOADER ─────────────────────── */
-(function initDiagonalWaveLoader() {
+applyTheme(state.theme);
+
+/* ── 1. LOADER: diagonal dot wave sweeps down, then fades out (no retract) ── */
+(function initLoader() {
   const overlay = $('#loader-overlay');
   const canvas = $('#loader-wave-canvas');
-  const welcome = $('#loader-welcome');
   if (!overlay || !canvas) return;
 
   const ctx = canvas.getContext('2d');
-  let width = (canvas.width = window.innerWidth);
-  let height = (canvas.height = window.innerHeight);
-
   const SPACING = 20;
-  let cols = Math.ceil(width / SPACING) + 1;
-  let rows = Math.ceil(height / SPACING) + 1;
-  let maxDiag = cols + rows;
 
+  let width = 0, height = 0, cols = 0, rows = 0, maxDiag = 0;
   let waveFront = 0;
-  let retracting = false;
   let isLoaded = false;
+  let fading = false;
 
-  window.addEventListener('load', () => { isLoaded = true; });
-
-  // Timeout fallback in case load event fires early
-  setTimeout(() => { isLoaded = true; }, 500);
-
-  function renderWave() {
-    ctx.clearRect(0, 0, width, height);
-
-    if (!retracting) {
-      waveFront += 0.9;
-      if (waveFront > maxDiag) {
-        waveFront = maxDiag;
-        if (isLoaded) {
-          retracting = true;
-        } else {
-          waveFront = 0;
-        }
-      }
-    } else {
-      waveFront -= 1.2;
-      const fadeProgress = waveFront / maxDiag;
-      if (welcome) {
-        welcome.style.opacity = Math.max(0, fadeProgress).toFixed(2);
-      }
-
-      if (waveFront <= 0) {
-        overlay.classList.add('hidden');
-        document.body.classList.remove('loading');
-        return;
-      }
-    }
-
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const diagPos = c + r;
-        const distToFront = waveFront - diagPos;
-
-        if (distToFront >= 0) {
-          const radius = Math.min(6, Math.max(1, distToFront * 0.8));
-          const opacity = Math.min(0.95, Math.max(0.15, 1 - distToFront * 0.05));
-          ctx.beginPath();
-          ctx.arc(c * SPACING, r * SPACING, radius, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(17, 17, 17, ${opacity.toFixed(2)})`;
-          ctx.fill();
-        }
-      }
-    }
-
-    requestAnimationFrame(renderWave);
-  }
-
-  window.addEventListener('resize', () => {
+  function size() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
     cols = Math.ceil(width / SPACING) + 1;
     rows = Math.ceil(height / SPACING) + 1;
     maxDiag = cols + rows;
-  });
+  }
+  size();
 
-  renderWave();
+  // page counts as loaded once assets are in (or shortly after)
+  window.addEventListener('load', () => { isLoaded = true; });
+  setTimeout(() => { isLoaded = true; }, 600);
+
+  const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+
+  function render() {
+    // stop drawing once the loader is fully hidden
+    if (overlay.classList.contains('hidden')) return;
+
+    ctx.clearRect(0, 0, width, height);
+
+    // the wave only goes down; once it reaches the end it fades away
+    if (!fading) {
+      waveFront += 1.6;
+      if (waveFront >= maxDiag) {
+        waveFront = maxDiag;
+        if (isLoaded) {
+          fading = true;
+          overlay.classList.add('fading'); // fades grid + welcome dot together
+          setTimeout(() => {
+            overlay.classList.add('hidden');
+            document.body.classList.remove('loading'); // reveal the page
+          }, 700); // matches the css fade duration
+        }
+      }
+    }
+
+    // fill in the grid of dots behind the wave front
+    const rgb = isDark() ? '255, 255, 255' : '17, 17, 17';
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const distToFront = waveFront - (c + r);
+        if (distToFront >= 0) {
+          const radius = Math.min(6, Math.max(1, distToFront * 0.8));
+          const opacity = Math.min(0.95, Math.max(0.15, 1 - distToFront * 0.05));
+          ctx.beginPath();
+          ctx.arc(c * SPACING, r * SPACING, radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${rgb}, ${opacity.toFixed(2)})`;
+          ctx.fill();
+        }
+      }
+    }
+
+    requestAnimationFrame(render);
+  }
+
+  window.addEventListener('resize', size);
+  render();
 })();
 
-/* ── 2. HIGH-CONTRAST DOT MATRIX BACKGROUND ─────────────── */
+/* ── 2. DOT MATRIX BACKGROUND (reacts to mouse) ─────────────── */
 let updateBgConfig = () => {};
 
-(function initDotMatrixBg() {
+(function initDotMatrix() {
   const canvas = $('#dot-matrix-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
-  let SPACING = state.bgSpacing;
   const BASE_RADIUS = 1.3;
   const MAX_RADIUS = 5.0;
   const INFLUENCE_DIST = 160;
@@ -123,19 +121,19 @@ let updateBgConfig = () => {};
   let dots = [];
   const mouse = { x: -1000, y: -1000 };
 
+  const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+
   function resize() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
-    SPACING = state.bgSpacing;
-    cols = Math.ceil(width / SPACING) + 1;
-    rows = Math.ceil(height / SPACING) + 1;
+    cols = Math.ceil(width / state.bgSpacing) + 1;
+    rows = Math.ceil(height / state.bgSpacing) + 1;
     dots = [];
-
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         dots.push({
-          x: c * SPACING,
-          y: r * SPACING,
+          x: c * state.bgSpacing,
+          y: r * state.bgSpacing,
           radius: BASE_RADIUS,
           phase: Math.random() * Math.PI * 2
         });
@@ -146,12 +144,6 @@ let updateBgConfig = () => {};
   window.addEventListener('mousemove', (e) => {
     mouse.x = e.clientX;
     mouse.y = e.clientY;
-
-    // Telemetry update
-    const coordsEl = $('#mouse-coords');
-    if (coordsEl) {
-      coordsEl.textContent = `X: ${String(e.clientX).padStart(3, '0')} | Y: ${String(e.clientY).padStart(3, '0')}`;
-    }
   });
 
   let time = 0;
@@ -160,11 +152,7 @@ let updateBgConfig = () => {};
     ctx.clearRect(0, 0, width, height);
     time += 0.02;
 
-    const isDark = document.body.getAttribute('data-theme') === 'dark';
-    const rgb = isDark ? '255, 255, 255' : '17, 17, 17';
-
-    const baseAlpha = state.bgBaseOpacity;
-    const hoverAlpha = state.bgHoverOpacity;
+    const rgb = isDark() ? '255, 255, 255' : '17, 17, 17';
 
     for (let i = 0; i < dots.length; i++) {
       const dot = dots[i];
@@ -177,18 +165,15 @@ let updateBgConfig = () => {};
 
       if (dist < INFLUENCE_DIST) {
         proximityFactor = 1 - dist / INFLUENCE_DIST;
-        // Quadratic easing for high contrast expansion
+        // quadratic easing for a crisp expansion
         targetR = BASE_RADIUS + (MAX_RADIUS - BASE_RADIUS) * proximityFactor * proximityFactor;
       }
-      
-      // Ambient pulse wave
-      targetR += Math.sin(dot.phase + time) * 0.2;
 
-      // Smooth spring interpolation
+      // soft ambient pulse so the grid stays alive
+      targetR += Math.sin(dot.phase + time) * 0.2;
       dot.radius += (targetR - dot.radius) * 0.15;
 
-      // Calculate dynamic high-contrast opacity
-      const opacity = baseAlpha + (hoverAlpha - baseAlpha) * (proximityFactor * proximityFactor);
+      const opacity = state.bgBaseOpacity + (state.bgHoverOpacity - state.bgBaseOpacity) * (proximityFactor * proximityFactor);
 
       ctx.beginPath();
       ctx.arc(dot.x, dot.y, Math.max(0.6, dot.radius), 0, Math.PI * 2);
@@ -199,27 +184,20 @@ let updateBgConfig = () => {};
     requestAnimationFrame(render);
   }
 
-  updateBgConfig = function() {
-    SPACING = state.bgSpacing;
-    resize();
-    const indicator = $('#bg-contrast-indicator');
-    if (indicator) {
-      indicator.textContent = `CUSTOM (${state.bgBaseOpacity} / ${state.bgHoverOpacity})`;
-    }
-  };
+  // called when contrast/spacing changes in settings
+  updateBgConfig = () => resize();
 
   window.addEventListener('resize', resize);
   resize();
   render();
 })();
 
-/* ── 3. CLOCK & SEARCH ENGINE SYSTEM ─────────────────────── */
+/* ── 3. CLOCK (with timezone + 12/24h) & SEARCH ────────────── */
 (function initClockAndSearch() {
   const clockEl = $('#clock-display');
   const periodEl = $('#clock-period');
   const dateEl = $('#date-display');
   const tzEl = $('#tz-display');
-  const greetingEl = $('#greeting-text');
 
   function updateClock() {
     const now = new Date();
@@ -227,61 +205,51 @@ let updateBgConfig = () => {};
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
 
-    if (greetingEl) {
-      if (hours < 12) greetingEl.textContent = 'GOOD MORNING // SYSTEM ONLINE';
-      else if (hours < 18) greetingEl.textContent = 'GOOD AFTERNOON // SYSTEM ONLINE';
-      else greetingEl.textContent = 'GOOD EVENING // SYSTEM ONLINE';
-    }
-
-    if (!state.clock24h) {
-      const ampm = hours >= 12 ? 'PM' : 'AM';
+    if (state.clock24h) {
+      if (periodEl) periodEl.textContent = '';
+      if (clockEl) clockEl.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+    } else {
+      const ampm = hours >= 12 ? 'pm' : 'am';
       hours = hours % 12 || 12;
       if (periodEl) periodEl.textContent = ampm;
       if (clockEl) clockEl.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
-    } else {
-      if (periodEl) periodEl.textContent = '24H';
-      if (clockEl) clockEl.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
     }
 
-    // Update Date
     if (dateEl) {
       const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
-      dateEl.textContent = now.toLocaleDateString('en-US', options).toUpperCase();
+      dateEl.textContent = now.toLocaleDateString('en-US', options).toLowerCase();
     }
 
-    // Update Timezone
     if (tzEl) {
       const offset = -now.getTimezoneOffset();
       const sign = offset >= 0 ? '+' : '-';
       const padH = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
       const padM = String(Math.abs(offset) % 60).padStart(2, '0');
-      tzEl.textContent = `UTC${sign}${padH}:${padM}`;
+      tzEl.textContent = `utc${sign}${padH}:${padM}`;
     }
   }
 
   setInterval(updateClock, 1000);
   updateClock();
 
-  /* Search Engine Handling */
+  /* search */
   const searchInput = $('#search-input');
   const searchBtn = $('#search-btn');
-  const engineBadge = $('#search-engine-badge');
+  const engineBadge = $('#search-badge');
   const engineTags = $$('.engine-tag');
 
   const engineUrls = {
     google: 'https://www.google.com/search?q=',
     duckduckgo: 'https://duckduckgo.com/?q=',
     github: 'https://github.com/search?q=',
-    youtube: 'https://www.youtube.com/results?search_query=',
-    wikipedia: 'https://en.wikipedia.org/wiki/Special:Search?search='
+    youtube: 'https://www.youtube.com/results?search_query='
   };
 
   const enginePrefixes = {
     'g:': 'google',
     'ddg:': 'duckduckgo',
     'gh:': 'github',
-    'yt:': 'youtube',
-    'w:': 'wikipedia'
+    'yt:': 'youtube'
   };
 
   function setEngine(engineKey) {
@@ -290,7 +258,7 @@ let updateBgConfig = () => {};
     engineTags.forEach(tag => {
       if (tag.dataset.engine === engineKey) {
         tag.classList.add('active');
-        if (engineBadge) engineBadge.textContent = tag.dataset.prefix;
+        if (engineBadge) engineBadge.textContent = tag.dataset.prefix || '';
       } else {
         tag.classList.remove('active');
       }
@@ -309,7 +277,7 @@ let updateBgConfig = () => {};
     let query = searchInput.value.trim();
     if (!query) return;
 
-    // Check prefix commands in text like "gh: react"
+    // prefix command like "gh: react"
     for (const [prefix, engineKey] of Object.entries(enginePrefixes)) {
       if (query.toLowerCase().startsWith(prefix)) {
         setEngine(engineKey);
@@ -318,7 +286,7 @@ let updateBgConfig = () => {};
       }
     }
 
-    // Direct URL check
+    // direct url
     const isUrl = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/i.test(query);
     if (isUrl && !query.includes(' ')) {
       const url = query.startsWith('http') ? query : `https://${query}`;
@@ -326,8 +294,7 @@ let updateBgConfig = () => {};
       return;
     }
 
-    const searchUrl = engineUrls[state.searchEngine] + encodeURIComponent(query);
-    window.location.href = searchUrl;
+    window.location.href = engineUrls[state.searchEngine] + encodeURIComponent(query);
   }
 
   if (searchBtn) searchBtn.addEventListener('click', performSearch);
@@ -339,7 +306,7 @@ let updateBgConfig = () => {};
       }
     });
 
-    // Detect live prefix typing to highlight badge
+    // live prefix typing highlights the right engine
     searchInput.addEventListener('input', () => {
       const text = searchInput.value.trim().toLowerCase();
       for (const [prefix, engineKey] of Object.entries(enginePrefixes)) {
@@ -351,10 +318,10 @@ let updateBgConfig = () => {};
     });
   }
 
-  // Global key listener for search focus '/' and hotkeys '1-9'
+  // '/' focuses search, 1-9 opens shortcuts, alt+s toggles settings
   window.addEventListener('keydown', (e) => {
     const isEditing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
-    
+
     if (e.key === '/' && !isEditing) {
       e.preventDefault();
       if (searchInput) searchInput.focus();
@@ -370,13 +337,12 @@ let updateBgConfig = () => {};
 
     if (e.altKey && (e.key === 's' || e.key === 'S')) {
       e.preventDefault();
-      const settingsModal = $('#settings-modal');
-      if (settingsModal) settingsModal.classList.toggle('open');
+      toggleSettings();
     }
   });
 })();
 
-/* ── 4. SHORTCUTS GRID MANAGER ────────────────────────────── */
+/* ── 4. SHORTCUTS GRID ─────────────────────────────────────── */
 (function initShortcuts() {
   const container = $('#shortcuts-grid');
   const addBtn = $('#add-shortcut-btn');
@@ -384,41 +350,6 @@ let updateBgConfig = () => {};
   const closeBtn = $('#close-shortcut-modal');
   const cancelBtn = $('#cancel-shortcut-btn');
   const form = $('#shortcut-form');
-
-  function renderShortcuts() {
-    if (!container) return;
-    container.innerHTML = '';
-
-    state.shortcuts.forEach((item) => {
-      const card = document.createElement('a');
-      card.href = item.url;
-      card.className = 'shortcut-card';
-      
-      card.innerHTML = `
-        <div class="shortcut-top">
-          <div class="shortcut-icon">${item.icon || item.title.substring(0, 2).toUpperCase()}</div>
-          ${item.key ? `<span class="shortcut-key">[${item.key}]</span>` : ''}
-        </div>
-        <div class="shortcut-bottom">
-          <div class="shortcut-title">${item.title}</div>
-          <div class="shortcut-domain">${cleanDomain(item.url)}</div>
-        </div>
-        <button class="delete-shortcut-btn" data-id="${item.id}" title="Remove shortcut">&times;</button>
-      `;
-
-      // Handle delete click without triggering navigation
-      const delBtn = card.querySelector('.delete-shortcut-btn');
-      delBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        state.shortcuts = state.shortcuts.filter(s => s.id !== item.id);
-        saveShortcuts();
-        renderShortcuts();
-      });
-
-      container.appendChild(card);
-    });
-  }
 
   function cleanDomain(url) {
     try {
@@ -432,9 +363,56 @@ let updateBgConfig = () => {};
     localStorage.setItem('oxy_shortcuts', JSON.stringify(state.shortcuts));
   }
 
-  if (addBtn) addBtn.addEventListener('click', () => modal && modal.classList.add('open'));
-  if (closeBtn) closeBtn.addEventListener('click', () => modal && modal.classList.remove('open'));
-  if (cancelBtn) cancelBtn.addEventListener('click', () => modal && modal.classList.remove('open'));
+  function renderShortcuts() {
+    if (!container) return;
+    container.innerHTML = '';
+
+    state.shortcuts.forEach((item) => {
+      const card = document.createElement('a');
+      card.href = item.url;
+      card.className = 'shortcut-card';
+
+      // icon top-left, info bottom-left, key badge bottom-right, delete top-right
+      card.innerHTML = `
+        <div class="shortcut-icon">${item.icon || item.title.substring(0, 2).toLowerCase()}</div>
+        <div class="shortcut-bottom">
+          <div class="shortcut-title">${item.title}</div>
+          <div class="shortcut-domain">${cleanDomain(item.url)}</div>
+        </div>
+        ${item.key ? `<span class="shortcut-key">${item.key}</span>` : ''}
+        <button class="shortcut-del" data-id="${item.id}" title="remove shortcut">&times;</button>
+      `;
+
+      // delete without triggering navigation
+      const delBtn = card.querySelector('.shortcut-del');
+      delBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        state.shortcuts = state.shortcuts.filter(s => s.id !== item.id);
+        saveShortcuts();
+        renderShortcuts();
+      });
+
+      container.appendChild(card);
+    });
+  }
+
+  function openModal() { if (modal) modal.classList.add('open'); }
+  function closeModal() { if (modal) modal.classList.remove('open'); }
+
+  if (addBtn) addBtn.addEventListener('click', openModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+  // click outside or press escape to close
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+    });
+  }
 
   if (form) {
     form.addEventListener('submit', (e) => {
@@ -447,37 +425,32 @@ let updateBgConfig = () => {};
         url = 'https://' + url;
       }
 
-      const newShortcut = {
+      state.shortcuts.push({
         id: Date.now().toString(),
         title,
         url,
         key: key ? key.substring(0, 1) : '',
-        icon: title.substring(0, 2).toUpperCase()
-      };
-
-      state.shortcuts.push(newShortcut);
+        icon: title.substring(0, 2).toLowerCase()
+      });
       saveShortcuts();
       renderShortcuts();
 
       form.reset();
-      modal.classList.remove('open');
+      closeModal();
     });
   }
 
   renderShortcuts();
 })();
 
-/* ── 5. SCRATCHPAD WIDGET ─────────────────────────────────── */
+/* ── 5. SCRATCHPAD (saves automatically) ────────────────────── */
 (function initScratchpad() {
-  const textarea = $('#scratchpad-input');
+  const textarea = $('#scratchpad');
   const countEl = $('#scratch-count');
   const clearBtn = $('#clear-scratch-btn');
-
   if (!textarea) return;
 
-  // Load saved content
-  const saved = localStorage.getItem('oxy_scratchpad') || '';
-  textarea.value = saved;
+  textarea.value = localStorage.getItem('oxy_scratchpad') || '';
   updateCount();
 
   textarea.addEventListener('input', () => {
@@ -494,96 +467,11 @@ let updateBgConfig = () => {};
   }
 
   function updateCount() {
-    if (countEl) {
-      countEl.textContent = `${textarea.value.length} chars`;
-    }
+    if (countEl) countEl.textContent = textarea.value.length;
   }
 })();
 
-/* ── 6. POMODORO / FOCUS TIMER WIDGET ─────────────────────── */
-(function initFocusTimer() {
-  const display = $('#timer-display');
-  const statusEl = $('#timer-status');
-  const progressFill = $('#timer-progress-fill');
-  const startBtn = $('#timer-start-btn');
-  const resetBtn = $('#timer-reset-btn');
-  const presetBtns = $$('.timer-preset-btn');
-
-  let totalTime = 1500; // 25 min default
-  let remainingTime = 1500;
-  let timerId = null;
-  let isRunning = false;
-
-  function updateDisplay() {
-    const mins = Math.floor(remainingTime / 60);
-    const secs = remainingTime % 60;
-    const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    
-    if (display) display.textContent = timeStr;
-    if (progressFill) {
-      const pct = (remainingTime / totalTime) * 100;
-      progressFill.style.width = `${pct}%`;
-    }
-
-    if (isRunning) {
-      document.title = `(${timeStr}) Focus // Oxygenated`;
-    } else {
-      document.title = `New Tab // Oxygenated`;
-    }
-  }
-
-  function startTimer() {
-    if (isRunning) {
-      clearInterval(timerId);
-      isRunning = false;
-      if (startBtn) startBtn.textContent = 'RESUME';
-      if (statusEl) statusEl.textContent = 'PAUSED';
-      return;
-    }
-
-    isRunning = true;
-    if (startBtn) startBtn.textContent = 'PAUSE';
-    if (statusEl) statusEl.textContent = 'RUNNING';
-
-    timerId = setInterval(() => {
-      remainingTime--;
-      updateDisplay();
-
-      if (remainingTime <= 0) {
-        clearInterval(timerId);
-        isRunning = false;
-        if (startBtn) startBtn.textContent = 'START';
-        if (statusEl) statusEl.textContent = 'FINISHED!';
-        alert('⏱️ Focus Timer Session Finished!');
-      }
-    }, 1000);
-  }
-
-  function resetTimer() {
-    clearInterval(timerId);
-    isRunning = false;
-    remainingTime = totalTime;
-    if (startBtn) startBtn.textContent = 'START';
-    if (statusEl) statusEl.textContent = 'READY';
-    updateDisplay();
-  }
-
-  presetBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      presetBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      totalTime = parseInt(btn.dataset.time, 10);
-      resetTimer();
-    });
-  });
-
-  if (startBtn) startBtn.addEventListener('click', startTimer);
-  if (resetBtn) resetBtn.addEventListener('click', resetTimer);
-
-  updateDisplay();
-})();
-
-/* ── 7. 3D INTERACTIVE CAD WIREFRAME VIEWPORT ─────────────── */
+/* ── 6. 3D INTERACTIVE WIREFRAME VIEWPORT ───────────────────── */
 (function init3DCAD() {
   const canvas = $('#cad-3d-canvas');
   const coordsEl = $('#cad-coords');
@@ -593,8 +481,10 @@ let updateBgConfig = () => {};
   const w = canvas.width;
   const h = canvas.height;
 
-  let mode = 'icosahedron'; // icosahedron, heart, cube
+  let mode = 'icosahedron';
   let vertices = [];
+
+  const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
 
   function generateGeometry() {
     vertices = [];
@@ -605,14 +495,13 @@ let updateBgConfig = () => {};
         [0, -1, phi], [0, 1, phi], [0, -1, -phi], [0, 1, -phi],
         [phi, 0, -1], [phi, 0, 1], [-phi, 0, -1], [-phi, 0, 1]
       ];
-      // Scale and add sub-points along edges for dense dot CAD look
       raw.forEach(v => {
         vertices.push({ x: v[0] * 32, y: v[1] * 32, z: v[2] * 32 });
       });
-      // Interpolate points between vertices for wireframe dot effect
+      // dots along edges for a wireframe feel
       for (let i = 0; i < raw.length; i++) {
         for (let j = i + 1; j < raw.length; j++) {
-          const dist = Math.hypot(raw[i][0]-raw[j][0], raw[i][1]-raw[j][1], raw[i][2]-raw[j][2]);
+          const dist = Math.hypot(raw[i][0] - raw[j][0], raw[i][1] - raw[j][1], raw[i][2] - raw[j][2]);
           if (dist < 2.3) {
             for (let t = 0.2; t < 1; t += 0.2) {
               vertices.push({
@@ -633,7 +522,7 @@ let updateBgConfig = () => {};
           vertices.push({ x: x * 3.8, y: y * 3.8, z: zOffset });
         }
       });
-    } else { // Cube
+    } else { // cube
       for (let x = -1; x <= 1; x += 0.5) {
         for (let y = -1; y <= 1; y += 0.5) {
           for (let z = -1; z <= 1; z += 0.5) {
@@ -653,15 +542,13 @@ let updateBgConfig = () => {};
       if (mode === 'icosahedron') mode = 'heart';
       else if (mode === 'heart') mode = 'cube';
       else mode = 'icosahedron';
-      modeBtn.textContent = `MODE: ${mode.toUpperCase()}`;
+      modeBtn.textContent = mode;
       generateGeometry();
     });
   }
 
-  let rotX = 0.2;
-  let rotY = 0.4;
-  let targetRotX = 0.2;
-  let targetRotY = 0.4;
+  let rotX = 0.2, rotY = 0.4;
+  let targetRotX = 0.2, targetRotY = 0.4;
   let isDragging = false;
   let lastX = 0, lastY = 0;
 
@@ -674,10 +561,8 @@ let updateBgConfig = () => {};
 
   window.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-    const dx = e.clientX - lastX;
-    const dy = e.clientY - lastY;
-    targetRotY += dx * 0.01;
-    targetRotX += dy * 0.01;
+    targetRotY += (e.clientX - lastX) * 0.01;
+    targetRotX += (e.clientY - lastY) * 0.01;
     lastX = e.clientX;
     lastY = e.clientY;
   });
@@ -685,40 +570,30 @@ let updateBgConfig = () => {};
   window.addEventListener('mouseup', () => { isDragging = false; });
 
   function render3D() {
-    if (!isDragging) {
-      targetRotY += 0.008;
-    }
+    if (!isDragging) targetRotY += 0.008;
 
     rotX += (targetRotX - rotX) * 0.1;
     rotY += (targetRotY - rotY) * 0.1;
 
-    if (coordsEl) {
-      coordsEl.textContent = `X: ${rotX.toFixed(2)} Y: ${rotY.toFixed(2)}`;
-    }
+    if (coordsEl) coordsEl.textContent = `x: ${rotX.toFixed(2)} y: ${rotY.toFixed(2)}`;
 
     ctx.clearRect(0, 0, w, h);
 
-    const cx = w / 2;
-    const cy = h / 2;
-    const fov = 240;
-
+    const cx = w / 2, cy = h / 2, fov = 240;
     const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
     const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
-
-    const isDark = document.body.getAttribute('data-theme') === 'dark';
-    const rgb = isDark ? '255, 255, 255' : '17, 17, 17';
+    const rgb = isDark() ? '255, 255, 255' : '17, 17, 17';
 
     for (let i = 0; i < vertices.length; i++) {
       const v = vertices[i];
-      let x1 = v.x * cosY - v.z * sinY;
-      let z1 = v.x * sinY + v.z * cosY;
-      let y2 = v.y * cosX - z1 * sinX;
-      let z2 = v.y * sinX + z1 * cosX;
+      const x1 = v.x * cosY - v.z * sinY;
+      const z1 = v.x * sinY + v.z * cosY;
+      const y2 = v.y * cosX - z1 * sinX;
+      const z2 = v.y * sinX + z1 * cosX;
 
       const scale = fov / (fov + z2 + 180);
       const px = cx + x1 * scale;
       const py = cy + y2 * scale;
-
       const radius = Math.max(1, 2.2 * scale);
       const alpha = Math.min(0.9, Math.max(0.2, (scale - 0.4) * 1.8));
 
@@ -734,53 +609,75 @@ let updateBgConfig = () => {};
   render3D();
 })();
 
-/* ── 8. SETTINGS & THEME TOGGLE ───────────────────────────── */
+/* ── 7. SETTINGS DRAWER ────────────────────────────────────── */
+let toggleSettings = () => {};
+
 (function initSettings() {
-  const toggleBtn = $('#settings-toggle-btn');
-  const modal = $('#settings-modal');
-  const closeBtn = $('#close-settings-modal');
-  const confirmBtn = $('#close-settings-confirm');
-  const contrastBtns = $$('.set-contrast-btn');
-  const spacingBtns = $$('.set-spacing-btn');
-  const btn24h = $('#clock-24h-btn');
-  const btn12h = $('#clock-12h-btn');
-  const btnLight = $('#theme-light-btn');
-  const btnDark = $('#theme-dark-btn');
+  const toggleBtn = $('#settings-toggle');
+  const drawer = $('#settings-drawer');
+  const bg = $('#drawer-bg');
+  const closeBtn = $('#close-drawer');
+  const contrastOpts = $$('#contrast-opts .opt');
+  const spacingOpts = $$('#spacing-opts .opt');
+  const btn24h = $('#btn-24h');
+  const btn12h = $('#btn-12h');
+  const btnLight = $('#btn-light');
+  const btnDark = $('#btn-dark');
   const resetShortcutsBtn = $('#reset-shortcuts-btn');
 
-  // Apply initial theme
-  if (state.theme === 'dark') {
-    document.body.setAttribute('data-theme', 'dark');
-    if (btnDark) btnDark.classList.add('active');
-    if (btnLight) btnLight.classList.remove('active');
+  // reflect saved choices on the selected option buttons
+  contrastOpts.forEach(o => {
+    o.classList.toggle('active', parseFloat(o.dataset.base) === state.bgBaseOpacity);
+  });
+  spacingOpts.forEach(o => {
+    o.classList.toggle('active', parseInt(o.dataset.spacing, 10) === state.bgSpacing);
+  });
+  if (btn24h) btn24h.classList.toggle('active', state.clock24h);
+  if (btn12h) btn12h.classList.toggle('active', !state.clock24h);
+  if (btnLight) btnLight.classList.toggle('active', state.theme !== 'dark');
+  if (btnDark) btnDark.classList.toggle('active', state.theme === 'dark');
+
+  // open / close the drawer
+  toggleSettings = () => {
+    if (!drawer) return;
+    const open = drawer.classList.toggle('open');
+    if (bg) bg.classList.toggle('open', open);
+  };
+
+  if (toggleBtn) toggleBtn.addEventListener('click', toggleSettings);
+  if (closeBtn) closeBtn.addEventListener('click', toggleSettings);
+  if (bg) {
+    bg.addEventListener('click', () => {
+      if (drawer && drawer.classList.contains('open')) toggleSettings();
+    });
   }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer && drawer.classList.contains('open')) toggleSettings();
+  });
 
-  if (toggleBtn) toggleBtn.addEventListener('click', () => modal && modal.classList.add('open'));
-  if (closeBtn) closeBtn.addEventListener('click', () => modal && modal.classList.remove('open'));
-  if (confirmBtn) confirmBtn.addEventListener('click', () => modal && modal.classList.remove('open'));
-
-  contrastBtns.forEach(btn => {
+  // dot contrast
+  contrastOpts.forEach(btn => {
     btn.addEventListener('click', () => {
-      contrastBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
       state.bgBaseOpacity = parseFloat(btn.dataset.base);
       state.bgHoverOpacity = parseFloat(btn.dataset.hover);
       localStorage.setItem('oxy_bg_base', state.bgBaseOpacity);
       localStorage.setItem('oxy_bg_hover', state.bgHoverOpacity);
+      contrastOpts.forEach(o => o.classList.toggle('active', o === btn));
       updateBgConfig();
     });
   });
 
-  spacingBtns.forEach(btn => {
+  // dot spacing
+  spacingOpts.forEach(btn => {
     btn.addEventListener('click', () => {
-      spacingBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
       state.bgSpacing = parseInt(btn.dataset.spacing, 10);
       localStorage.setItem('oxy_bg_spacing', state.bgSpacing);
+      spacingOpts.forEach(o => o.classList.toggle('active', o === btn));
       updateBgConfig();
     });
   });
 
+  // clock format
   if (btn24h && btn12h) {
     btn24h.addEventListener('click', () => {
       state.clock24h = true;
@@ -788,7 +685,6 @@ let updateBgConfig = () => {};
       btn24h.classList.add('active');
       btn12h.classList.remove('active');
     });
-
     btn12h.addEventListener('click', () => {
       state.clock24h = false;
       localStorage.setItem('oxy_clock_24h', 'false');
@@ -797,61 +693,31 @@ let updateBgConfig = () => {};
     });
   }
 
+  // theme
   if (btnLight && btnDark) {
     btnLight.addEventListener('click', () => {
-      document.body.removeAttribute('data-theme');
       state.theme = 'light';
       localStorage.setItem('oxy_theme', 'light');
+      applyTheme('light');
       btnLight.classList.add('active');
       btnDark.classList.remove('active');
     });
-
     btnDark.addEventListener('click', () => {
-      document.body.setAttribute('data-theme', 'dark');
       state.theme = 'dark';
       localStorage.setItem('oxy_theme', 'dark');
+      applyTheme('dark');
       btnDark.classList.add('active');
       btnLight.classList.remove('active');
     });
   }
 
+  // reset shortcuts
   if (resetShortcutsBtn) {
     resetShortcutsBtn.addEventListener('click', () => {
-      if (confirm('Reset shortcuts to default presets?')) {
+      if (confirm('reset shortcuts to default?')) {
         localStorage.removeItem('oxy_shortcuts');
         location.reload();
       }
     });
-  }
-
-  // Telemetry updates
-  const netStatusEl = $('#net-status');
-  const browserInfoEl = $('#browser-info');
-  const screenResEl = $('#screen-res');
-
-  if (screenResEl) {
-    screenResEl.textContent = `${window.innerWidth} x ${window.innerHeight}`;
-    window.addEventListener('resize', () => {
-      screenResEl.textContent = `${window.innerWidth} x ${window.innerHeight}`;
-    });
-  }
-
-  if (browserInfoEl) {
-    const ua = navigator.userAgent;
-    if (ua.includes('Firefox')) browserInfoEl.textContent = 'FIREFOX ENGINE';
-    else if (ua.includes('Edg')) browserInfoEl.textContent = 'EDGE CHROMIUM';
-    else if (ua.includes('Chrome')) browserInfoEl.textContent = 'GOOGLE CHROMIUM';
-    else if (ua.includes('Safari')) browserInfoEl.textContent = 'APPLE WEBKIT';
-    else browserInfoEl.textContent = 'GENERIC ENGINE';
-  }
-
-  if (netStatusEl) {
-    const updateNet = () => {
-      netStatusEl.textContent = navigator.onLine ? 'ONLINE (STABLE)' : 'OFFLINE';
-      netStatusEl.className = `t-val ${navigator.onLine ? 'highlight-val' : ''}`;
-    };
-    window.addEventListener('online', updateNet);
-    window.addEventListener('offline', updateNet);
-    updateNet();
   }
 })();

@@ -268,7 +268,7 @@ body:not(.loading) main { opacity: 1; transform: translateY(0); }
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: 4px; padding: 16px;
   display: flex; flex-direction: column;
-  min-height: 100px;
+  min-height: 104px;
   text-decoration: none; color: var(--text);
   transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
 }
@@ -283,10 +283,10 @@ body:not(.loading) main { opacity: 1; transform: translateY(0); }
   background: var(--bg-sub); border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-sans); font-size: 12px; font-weight: 700;
-  margin-bottom: auto;
 }
 
-.shortcut-info { margin-top: 12px; }
+/* pushes the title/domain block to the bottom of the card */
+.shortcut-bottom { margin-top: auto; }
 
 .shortcut-title {
   font-family: var(--font-sans); font-size: 13px; font-weight: 700;
@@ -354,7 +354,7 @@ body:not(.loading) main { opacity: 1; transform: translateY(0); }
 .btn-text {
   background: none; border: none;
   font-family: var(--font-mono); font-size: 10px;
-  color: var(--text-dim); cursor: pointer; text-decoration: underline;
+  color: var(--text-dim); cursor: pointer;
   transition: color 0.2s;
 }
 .btn-text:hover { color: var(--text); }
