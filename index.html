@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Tab // Oxygenated</title>
+  <meta name="description" content="Sleek, modern, and minimal new tab page with high-contrast dot matrix interaction and system dashboard widgets.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="loading">
+
+  <!-- Entrance diagonal wave canvas loader -->
+  <div class="loader-overlay" id="loader-overlay">
+    <canvas id="loader-wave-canvas"></canvas>
+    <div class="loader-welcome" id="loader-welcome">
+      <span class="red-dot inline-dot"></span> INITIALIZING SYSTEM...
+    </div>
+  </div>
+
+  <!-- Background interactive dot matrix canvas -->
+  <canvas id="dot-matrix-canvas"></canvas>
+
+  <!-- Folder-tab navigation bar -->
+  <header class="nav-header">
+    <div class="nav-container">
+      <div class="brand-group">
+        <a href="#" class="nav-brand" id="brand-link">
+          <span class="red-dot"></span> OXY <span class="brand-sub">// TAB</span>
+        </a>
+      </div>
+
+      <nav class="folder-tabs" id="folder-tabs">
+        <button class="tab-item active" data-target="section-dash">
+          <span class="tab-num">01</span> DASHBOARD
+        </button>
+        <button class="tab-item" data-target="section-shortcuts">
+          <span class="tab-num">02</span> SHORTCUTS
+        </button>
+        <button class="tab-item" data-target="section-widgets">
+          <span class="tab-num">03</span> WIDGETS
+        </button>
+      </nav>
+
+      <div class="nav-actions">
+        <div class="status-indicator">
+          <span class="pulse-dot"></span>
+          <span id="tz-display">UTC+00:00</span>
+        </div>
+        <button class="icon-btn" id="settings-toggle-btn" title="Settings [Alt+S]" aria-label="Open Settings">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      
+      <!-- HERO / MAIN DASHBOARD -->
+      <section class="section hero-section" id="section-dash">
+        <div class="hero-center">
+          
+          <!-- System Status Bar -->
+          <div class="hero-tagline">
+            <span class="red-dot"></span>
+            <span id="greeting-text">SYSTEM ONLINE</span>
+            <span class="divider">//</span>
+            <span id="date-display">LOADING DATE...</span>
+          </div>
+
+          <!-- Giant Digital Clock -->
+          <div class="clock-wrapper">
+            <h1 class="clock-display" id="clock-display">00:00:00</h1>
+            <span class="clock-sub" id="clock-period">AM</span>
+          </div>
+
+          <!-- Command-bar Search Input -->
+          <div class="search-container">
+            <div class="search-box">
+              <span class="search-prefix" id="search-engine-badge">G:</span>
+              <input type="text" id="search-input" placeholder="Type query or URL... (Press '/' to focus, 'g:', 'gh:', 'yt:', 'ddg:' to switch)" autocomplete="off" spellcheck="false">
+              <div class="search-key-hint"><kbd>/</kbd></div>
+              <button id="search-btn" class="search-submit-btn" aria-label="Execute Search">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+            
+            <!-- Quick Engine Selection Bar -->
+            <div class="engine-selector">
+              <button class="engine-tag active" data-engine="google" data-prefix="G:">Google</button>
+              <button class="engine-tag" data-engine="duckduckgo" data-prefix="DDG:">DuckDuckGo</button>
+              <button class="engine-tag" data-engine="github" data-prefix="GH:">GitHub</button>
+              <button class="engine-tag" data-engine="youtube" data-prefix="YT:">YouTube</button>
+              <button class="engine-tag" data-engine="wikipedia" data-prefix="W:">Wikipedia</button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SHORTCUTS GRID SECTION -->
+      <section class="section" id="section-shortcuts">
+        <div class="section-label">
+          <span class="red-dot"></span>
+          <span>QUICK LAUNCH SHORTCUTS</span>
+          <span class="label-hint">[PRESS 1-9 FOR INSTANT LAUNCH]</span>
+          <button class="btn btn-ghost btn-sm add-shortcut-btn" id="add-shortcut-btn">+ ADD SITE</button>
+        </div>
+
+        <div class="shortcuts-grid" id="shortcuts-grid">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </section>
+
+      <!-- WIDGETS SECTION -->
+      <section class="section" id="section-widgets">
+        <div class="section-label">
+          <span class="red-dot"></span>
+          <span>SYSTEM WIDGETS & TELEMETRY</span>
+        </div>
+
+        <div class="widgets-grid">
+          
+          <!-- Widget 1: Scratchpad / Notes -->
+          <div class="widget-card">
+            <div class="widget-header">
+              <div class="widget-title">
+                <span class="red-indicator">•</span> SCRATCHPAD
+              </div>
+              <div class="widget-controls">
+                <span class="char-count" id="scratch-count">0 chars</span>
+                <button class="btn-text" id="clear-scratch-btn">CLEAR</button>
+              </div>
+            </div>
+            <div class="widget-body">
+              <textarea id="scratchpad-input" placeholder="Type quick notes, ideas, code snippets, or to-dos here... (Auto-saved to local storage)"></textarea>
+            </div>
+          </div>
+
+          <!-- Widget 2: Focus / Pomodoro Timer -->
+          <div class="widget-card">
+            <div class="widget-header">
+              <div class="widget-title">
+                <span class="red-indicator">•</span> FOCUS TIMER
+              </div>
+              <div class="widget-controls" id="timer-status">
+                READY
+              </div>
+            </div>
+            <div class="widget-body timer-body">
+              <div class="timer-display" id="timer-display">25:00</div>
+              <div class="timer-progress-bar">
+                <div class="timer-progress-fill" id="timer-progress-fill"></div>
+              </div>
+              <div class="timer-presets">
+                <button class="pill timer-preset-btn active" data-time="1500">25M FOCUS</button>
+                <button class="pill timer-preset-btn" data-time="300">5M BREAK</button>
+                <button class="pill timer-preset-btn" data-time="600">10M BREAK</button>
+              </div>
+              <div class="timer-actions">
+                <button class="btn btn-black" id="timer-start-btn">START</button>
+                <button class="btn btn-ghost" id="timer-reset-btn">RESET</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Widget 3: Interactive 3D Wireframe CAD Viewport -->
+          <div class="widget-card cad-card">
+            <div class="cad-header">
+              <span>SYS_CAD // 3D MATRIX VIEWPORT</span>
+              <span class="red-indicator" id="cad-coords">X: 0.20 Y: 0.40</span>
+            </div>
+            <div class="cad-viewport" id="cad-viewport">
+              <canvas id="cad-3d-canvas" width="340" height="220"></canvas>
+              <div class="cad-hint">DRAG TO ROTATE 3D GEOMETRY</div>
+            </div>
+            <div class="cad-footer">
+              <span>RENDER: 60 FPS</span>
+              <span id="cad-mode-btn" style="cursor:pointer; text-decoration:underline;">MODE: ICOSAHEDRON</span>
+            </div>
+          </div>
+
+          <!-- Widget 4: Telemetry & Environment Info -->
+          <div class="widget-card">
+            <div class="widget-header">
+              <div class="widget-title">
+                <span class="red-indicator">•</span> ENVIRONMENT TELEMETRY
+              </div>
+              <span class="badge-black">ACTIVE</span>
+            </div>
+            <div class="widget-body telemetry-body">
+              <div class="telemetry-row">
+                <span class="t-key">NETWORK STATUS</span>
+                <span class="t-val highlight-val" id="net-status">ONLINE (100ms)</span>
+              </div>
+              <div class="telemetry-row">
+                <span class="t-key">BROWSER ENGINE</span>
+                <span class="t-val" id="browser-info">CHROMIUM</span>
+              </div>
+              <div class="telemetry-row">
+                <span class="t-key">SCREEN RES</span>
+                <span class="t-val" id="screen-res">1920 x 1080</span>
+              </div>
+              <div class="telemetry-row">
+                <span class="t-key">CURSOR POSITION</span>
+                <span class="t-val" id="mouse-coords">X: 000 | Y: 000</span>
+              </div>
+              <div class="telemetry-row">
+                <span class="t-key">BG CANVAS CONTRAST</span>
+                <span class="t-val highlight-val" id="bg-contrast-indicator">HIGH (0.22 / 0.85)</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div>OXYGENATED NEW TAB // HIGH-CONTRAST MATRIX EDITION</div>
+      <div>PRESS <kbd>ALT</kbd> + <kbd>S</kbd> FOR SETTINGS</div>
+    </div>
+  </footer>
+
+  <!-- MODAL: ADD CUSTOM SHORTCUT -->
+  <div class="modal-overlay" id="shortcut-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="card-title">ADD SHORTCUT</span>
+        <button class="modal-close-btn" id="close-shortcut-modal">&times;</button>
+      </div>
+      <form id="shortcut-form">
+        <div class="form-group">
+          <label for="shortcut-name">Title / Name</label>
+          <input type="text" id="shortcut-name" placeholder="e.g. GitHub" required>
+        </div>
+        <div class="form-group">
+          <label for="shortcut-url">URL</label>
+          <input type="url" id="shortcut-url" placeholder="https://github.com" required>
+        </div>
+        <div class="form-group">
+          <label for="shortcut-key">Keybinding (Optional 1-9)</label>
+          <input type="text" id="shortcut-key" maxlength="1" placeholder="e.g. 5">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="cancel-shortcut-btn">CANCEL</button>
+          <button type="submit" class="btn btn-black">SAVE SHORTCUT</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL / DRAWER: SETTINGS -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="card-title">SYSTEM CONFIGURATION</span>
+        <button class="modal-close-btn" id="close-settings-modal">&times;</button>
+      </div>
+      <div class="settings-body">
+        
+        <div class="settings-group">
+          <label class="settings-label">DOT MATRIX CONTRAST MODE</label>
+          <div class="settings-options">
+            <button class="btn btn-ghost btn-sm set-contrast-btn active" data-base="0.22" data-hover="0.85">HIGH CONTRAST (RECOMMENDED)</button>
+            <button class="btn btn-ghost btn-sm set-contrast-btn" data-base="0.35" data-hover="0.95">ULTRA CONTRAST</button>
+            <button class="btn btn-ghost btn-sm set-contrast-btn" data-base="0.12" data-hover="0.55">CLASSIC (MYSITE)</button>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <label class="settings-label">DOT GRID SPACING</label>
+          <div class="settings-options">
+            <button class="btn btn-ghost btn-sm set-spacing-btn" data-spacing="18">DENSE (18px)</button>
+            <button class="btn btn-ghost btn-sm set-spacing-btn active" data-spacing="24">BALANCED (24px)</button>
+            <button class="btn btn-ghost btn-sm set-spacing-btn" data-spacing="32">SPARSE (32px)</button>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <label class="settings-label">CLOCK FORMAT</label>
+          <div class="settings-options">
+            <button class="btn btn-ghost btn-sm active" id="clock-24h-btn">24-HOUR</button>
+            <button class="btn btn-ghost btn-sm" id="clock-12h-btn">12-HOUR</button>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <label class="settings-label">DARK / LIGHT THEME TOGGLE</label>
+          <div class="settings-options">
+            <button class="btn btn-ghost btn-sm active" id="theme-light-btn">LIGHT (ORIGINAL MYSITE)</button>
+            <button class="btn btn-ghost btn-sm" id="theme-dark-btn">DARK MATRIX</button>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <label class="settings-label">DATA MANAGEMENT</label>
+          <button class="btn btn-ghost btn-sm" id="reset-shortcuts-btn" style="color: var(--red-accent);">RESET SHORTCUTS TO DEFAULT</button>
+        </div>
+
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-black" id="close-settings-confirm">DONE</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
