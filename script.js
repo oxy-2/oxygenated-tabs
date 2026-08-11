@@ -618,7 +618,7 @@ let updateBgConfig = () => {};
   render3D();
 })();
 
-/* ── 7. DAILY QUOTE WIDGET (quote + wikipedia snippet + link) ── */
+/* ── 7. DAILY QUOTE WIDGET (quote + wikipedia link) ────────── */
 (function initQuote() {
   const quoteEl = $('#quote-text');
   const authorEl = $('#quote-author');
@@ -628,32 +628,37 @@ let updateBgConfig = () => {};
   if (!quoteEl) return;
 
   // built-in fallbacks so the box is never empty, even offline
+  // (these keep a short description; api quotes show quote + author only)
   const fallbacks = [
-    { quote: 'the unexamined life is not worth living.', author: 'socrates', desc: 'classical greek philosopher, one of the founders of western philosophy.', wiki: 'https://en.wikipedia.org/wiki/Socrates' },
-    { quote: 'whatever you can do, or dream you can, begin it. boldness has genius, power, and magic in it.', author: 'johann wolfgang von goethe', desc: 'german writer and statesman, author of faust.', wiki: 'https://en.wikipedia.org/wiki/Johann_Wolfgang_von_Goethe' },
-    { quote: 'the only way to do great work is to love what you do.', author: 'steve jobs', desc: 'american entrepreneur, co-founder of apple.', wiki: 'https://en.wikipedia.org/wiki/Steve_Jobs' },
-    { quote: 'be yourself; everyone else is already taken.', author: 'oscar wilde', desc: 'irish poet and playwright.', wiki: 'https://en.wikipedia.org/wiki/Oscar_Wilde' }
+    { quote: 'the unexamined life is not worth living.', author: 'Socrates', desc: 'classical greek philosopher, one of the founders of western philosophy.' },
+    { quote: 'whatever you can do, or dream you can, begin it. boldness has genius, power, and magic in it.', author: 'Johann Wolfgang von Goethe', desc: 'german writer and statesman, author of faust.' },
+    { quote: 'the only way to do great work is to love what you do.', author: 'Steve Jobs', desc: 'american entrepreneur, co-founder of apple.' },
+    { quote: 'be yourself; everyone else is already taken.', author: 'Oscar Wilde', desc: 'irish poet and playwright.' }
   ];
 
-  function render(item) {
-    quoteEl.textContent = `"${item.quote}"`;
+  // always link to wikipedia with the full name
+  const wikiUrl = (name) => 'https://en.wikipedia.org/wiki/' + encodeURIComponent(name).replace(/%20/g, '_');
 
-    if (item.wiki && linkEl) {
-      linkEl.href = item.wiki;
-      linkEl.textContent = item.author;
-      linkEl.style.display = 'inline';
-      if (authorEl) authorEl.textContent = '';
-    } else {
-      if (linkEl) linkEl.style.display = 'none';
-      if (authorEl) authorEl.textContent = item.author;
-    }
-
-    if (descEl) descEl.textContent = item.desc ? `— ${item.desc}` : '';
+  // clean the quote casing: lower everything, then re-capitalize
+  // only valid spots (start, after sentence end, the pronoun "i")
+  function toSentenceCase(text) {
+    return text
+      .toLowerCase()
+      .replace(/^\s*(\w)/, (m, ch) => ch.toUpperCase())
+      .replace(/([.!?]\s+)(\w)/g, (m, sp, ch) => sp + ch.toUpperCase())
+      .replace(/\bi\b/g, 'I');
   }
 
-  // strip the author name to the most common form for the wikipedia lookup
-  function cleanAuthor(name) {
-    return name.trim().split(/\s+/).pop();
+  function render(item) {
+    quoteEl.textContent = `"${toSentenceCase(item.quote)}"`;
+
+    if (linkEl) {
+      linkEl.href = wikiUrl(item.author);
+      linkEl.textContent = item.author;
+      linkEl.style.display = 'inline';
+    }
+    if (authorEl) authorEl.textContent = '';
+    if (descEl) descEl.textContent = item.desc ? `— ${item.desc}` : '';
   }
 
   async function loadQuote() {
@@ -667,22 +672,7 @@ let updateBgConfig = () => {};
       const data = await res.json();
       quote = { quote: data.quote, author: data.author };
     } catch (e) {
-      const fb = fallbacks[Math.floor(Math.random() * fallbacks.length)];
-      quote = { quote: fb.quote, author: fb.author, desc: fb.desc, wiki: fb.wiki };
-    }
-
-    // try to pull a short wikipedia snippet about the author
-    if (quote && !quote.wiki) {
-      try {
-        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanAuthor(quote.author))}`);
-        const data = await res.json();
-        if (data && data.extract) {
-          quote.desc = data.extract.split('.')[0] + '.';
-          quote.wiki = data.content_urls ? data.content_urls.desktop.page : `https://en.wikipedia.org/wiki/${encodeURIComponent(cleanAuthor(quote.author))}`;
-        }
-      } catch (e) {
-        // no wiki info available — quote + author is still fine
-      }
+      quote = fallbacks[Math.floor(Math.random() * fallbacks.length)];
     }
 
     render(quote || fallbacks[0]);
