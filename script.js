@@ -13,7 +13,8 @@ const applyTheme = (theme) => {
 const state = {
   theme: localStorage.getItem('oxy_theme') || 'light',
   clock24h: localStorage.getItem('oxy_clock_24h') !== 'false',
-  searchEngine: 'google', // google, duckduckgo, github, youtube
+  showSeconds: localStorage.getItem('oxy_show_seconds') !== 'false',
+  searchEngine: 'google', // google, duckduckgo, github, youtube, wikipedia
   bgBaseOpacity: parseFloat(localStorage.getItem('oxy_bg_base')) || 0.22,
   bgHoverOpacity: parseFloat(localStorage.getItem('oxy_bg_hover')) || 0.85,
   bgSpacing: parseInt(localStorage.getItem('oxy_bg_spacing')) || 24,
@@ -207,12 +208,18 @@ let updateBgConfig = () => {};
 
     if (state.clock24h) {
       if (periodEl) periodEl.textContent = '';
-      if (clockEl) clockEl.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+      if (clockEl) clockEl.textContent = formatTime(hours, minutes);
     } else {
       const ampm = hours >= 12 ? 'pm' : 'am';
       hours = hours % 12 || 12;
       if (periodEl) periodEl.textContent = ampm;
-      if (clockEl) clockEl.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+      if (clockEl) clockEl.textContent = formatTime(hours, minutes);
+    }
+
+    function formatTime(h, m) {
+      return state.showSeconds
+        ? `${String(h).padStart(2, '0')}:${m}:${seconds}`
+        : `${String(h).padStart(2, '0')}:${m}`;
     }
 
     if (dateEl) {
@@ -242,14 +249,16 @@ let updateBgConfig = () => {};
     google: 'https://www.google.com/search?q=',
     duckduckgo: 'https://duckduckgo.com/?q=',
     github: 'https://github.com/search?q=',
-    youtube: 'https://www.youtube.com/results?search_query='
+    youtube: 'https://www.youtube.com/results?search_query=',
+    wikipedia: 'https://en.wikipedia.org/wiki/Special:Search?search='
   };
 
   const enginePrefixes = {
     'g:': 'google',
     'ddg:': 'duckduckgo',
     'gh:': 'github',
-    'yt:': 'youtube'
+    'yt:': 'youtube',
+    'w:': 'wikipedia'
   };
 
   function setEngine(engineKey) {
@@ -609,7 +618,81 @@ let updateBgConfig = () => {};
   render3D();
 })();
 
-/* ── 7. SETTINGS DRAWER ────────────────────────────────────── */
+/* ── 7. DAILY QUOTE WIDGET (quote + wikipedia snippet + link) ── */
+(function initQuote() {
+  const quoteEl = $('#quote-text');
+  const authorEl = $('#quote-author');
+  const linkEl = $('#quote-link');
+  const descEl = $('#quote-desc');
+  const refreshBtn = $('#quote-refresh');
+  if (!quoteEl) return;
+
+  // built-in fallbacks so the box is never empty, even offline
+  const fallbacks = [
+    { quote: 'the unexamined life is not worth living.', author: 'socrates', desc: 'classical greek philosopher, one of the founders of western philosophy.', wiki: 'https://en.wikipedia.org/wiki/Socrates' },
+    { quote: 'whatever you can do, or dream you can, begin it. boldness has genius, power, and magic in it.', author: 'johann wolfgang von goethe', desc: 'german writer and statesman, author of faust.', wiki: 'https://en.wikipedia.org/wiki/Johann_Wolfgang_von_Goethe' },
+    { quote: 'the only way to do great work is to love what you do.', author: 'steve jobs', desc: 'american entrepreneur, co-founder of apple.', wiki: 'https://en.wikipedia.org/wiki/Steve_Jobs' },
+    { quote: 'be yourself; everyone else is already taken.', author: 'oscar wilde', desc: 'irish poet and playwright.', wiki: 'https://en.wikipedia.org/wiki/Oscar_Wilde' }
+  ];
+
+  function render(item) {
+    quoteEl.textContent = `"${item.quote}"`;
+
+    if (item.wiki && linkEl) {
+      linkEl.href = item.wiki;
+      linkEl.textContent = item.author;
+      linkEl.style.display = 'inline';
+      if (authorEl) authorEl.textContent = '';
+    } else {
+      if (linkEl) linkEl.style.display = 'none';
+      if (authorEl) authorEl.textContent = item.author;
+    }
+
+    if (descEl) descEl.textContent = item.desc ? `— ${item.desc}` : '';
+  }
+
+  // strip the author name to the most common form for the wikipedia lookup
+  function cleanAuthor(name) {
+    return name.trim().split(/\s+/).pop();
+  }
+
+  async function loadQuote() {
+    quoteEl.textContent = 'loading...';
+    if (authorEl) authorEl.textContent = '';
+    if (descEl) descEl.textContent = '';
+
+    let quote = null;
+    try {
+      const res = await fetch('https://dummyjson.com/quotes/random');
+      const data = await res.json();
+      quote = { quote: data.quote, author: data.author };
+    } catch (e) {
+      const fb = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+      quote = { quote: fb.quote, author: fb.author, desc: fb.desc, wiki: fb.wiki };
+    }
+
+    // try to pull a short wikipedia snippet about the author
+    if (quote && !quote.wiki) {
+      try {
+        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanAuthor(quote.author))}`);
+        const data = await res.json();
+        if (data && data.extract) {
+          quote.desc = data.extract.split('.')[0] + '.';
+          quote.wiki = data.content_urls ? data.content_urls.desktop.page : `https://en.wikipedia.org/wiki/${encodeURIComponent(cleanAuthor(quote.author))}`;
+        }
+      } catch (e) {
+        // no wiki info available — quote + author is still fine
+      }
+    }
+
+    render(quote || fallbacks[0]);
+  }
+
+  if (refreshBtn) refreshBtn.addEventListener('click', loadQuote);
+  loadQuote();
+})();
+
+/* ── 8. SETTINGS DRAWER ────────────────────────────────────── */
 let toggleSettings = () => {};
 
 (function initSettings() {
@@ -621,6 +704,8 @@ let toggleSettings = () => {};
   const spacingOpts = $$('#spacing-opts .opt');
   const btn24h = $('#btn-24h');
   const btn12h = $('#btn-12h');
+  const btnSecOn = $('#btn-seconds-on');
+  const btnSecOff = $('#btn-seconds-off');
   const btnLight = $('#btn-light');
   const btnDark = $('#btn-dark');
   const resetShortcutsBtn = $('#reset-shortcuts-btn');
@@ -634,6 +719,8 @@ let toggleSettings = () => {};
   });
   if (btn24h) btn24h.classList.toggle('active', state.clock24h);
   if (btn12h) btn12h.classList.toggle('active', !state.clock24h);
+  if (btnSecOn) btnSecOn.classList.toggle('active', state.showSeconds);
+  if (btnSecOff) btnSecOff.classList.toggle('active', !state.showSeconds);
   if (btnLight) btnLight.classList.toggle('active', state.theme !== 'dark');
   if (btnDark) btnDark.classList.toggle('active', state.theme === 'dark');
 
@@ -690,6 +777,22 @@ let toggleSettings = () => {};
       localStorage.setItem('oxy_clock_24h', 'false');
       btn12h.classList.add('active');
       btn24h.classList.remove('active');
+    });
+  }
+
+  // clock seconds
+  if (btnSecOn && btnSecOff) {
+    btnSecOn.addEventListener('click', () => {
+      state.showSeconds = true;
+      localStorage.setItem('oxy_show_seconds', 'true');
+      btnSecOn.classList.add('active');
+      btnSecOff.classList.remove('active');
+    });
+    btnSecOff.addEventListener('click', () => {
+      state.showSeconds = false;
+      localStorage.setItem('oxy_show_seconds', 'false');
+      btnSecOff.classList.add('active');
+      btnSecOn.classList.remove('active');
     });
   }
 

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>new tab</title>
-  <meta name="description" content="minimal new tab page">
+  <title>oxygenated</title>
+  <meta name="description" content="a personal new tab page">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,7 @@
   <div class="loader-overlay" id="loader-overlay">
     <canvas id="loader-wave-canvas"></canvas>
     <div class="loader-center">
-      <span class="red-dot loader-dot"></span>
+      <span class="loader-text">welcome.</span>
     </div>
   </div>
 
@@ -73,6 +73,7 @@
           <button class="engine-tag" data-engine="duckduckgo" data-prefix="ddg:">duckduckgo</button>
           <button class="engine-tag" data-engine="github" data-prefix="gh:">github</button>
           <button class="engine-tag" data-engine="youtube" data-prefix="yt:">youtube</button>
+          <button class="engine-tag" data-engine="wikipedia" data-prefix="w:">wikipedia</button>
         </div>
       </section>
 
@@ -85,12 +86,28 @@
         <div class="shortcuts-grid" id="shortcuts-grid"></div>
       </section>
 
+      <!-- daily quote -->
+      <section class="section" id="section-quote">
+        <div class="card quote-card">
+          <div class="card-head">
+            <span class="card-label"><span class="red-dot"></span> daily quote</span>
+            <button class="btn-text" id="quote-refresh">refresh</button>
+          </div>
+          <blockquote class="quote-text" id="quote-text">loading...</blockquote>
+          <div class="quote-author">
+            <a id="quote-link" href="#" target="_blank" rel="noopener"></a>
+            <span id="quote-author"></span>
+            <span id="quote-desc"></span>
+          </div>
+        </div>
+      </section>
+
       <!-- widgets: scratchpad + 3d viewport -->
       <section class="section">
         <div class="widgets-grid">
 
           <!-- scratchpad -->
-          <div class="card">
+          <div class="card scratch-card">
             <div class="card-head">
               <span class="card-label"><span class="red-dot"></span> scratchpad</span>
               <div class="card-actions">
@@ -121,7 +138,7 @@
       </section>
 
       <!-- page end -->
-      <div class="page-end"><span class="red-dot"></span></div>
+      <div class="page-end"><span class="page-end-text">made with love [oxy.]</span></div>
 
     </div>
   </main>
@@ -185,6 +202,14 @@
       <div class="setting-opts">
         <button class="opt active" id="btn-24h">24h</button>
         <button class="opt" id="btn-12h">12h</button>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <label>seconds</label>
+      <div class="setting-opts">
+        <button class="opt active" id="btn-seconds-on">on</button>
+        <button class="opt" id="btn-seconds-off">off</button>
       </div>
     </div>
 

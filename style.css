@@ -61,14 +61,16 @@ body.loading { overflow: hidden; }
 
 .loader-center { position: relative; z-index: 2; }
 
-.loader-dot {
-  width: 12px; height: 12px;
-  animation: pulse 1s infinite ease-in-out;
+.loader-text {
+  font-family: var(--font-sans);
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 700; letter-spacing: -0.02em;
+  animation: loaderFadeIn 0.8s ease;
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.5); opacity: 0.5; }
+@keyframes loaderFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* -- dot matrix bg -- */
@@ -325,6 +327,27 @@ body:not(.loading) main { opacity: 1; transform: translateY(0); }
   display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
 }
 
+/* -- daily quote -- */
+.quote-card { padding: 28px; }
+.quote-text {
+  font-family: var(--font-sans);
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: 600; line-height: 1.5; letter-spacing: -0.01em;
+  color: var(--text);
+  max-width: 640px;
+}
+.quote-author {
+  margin-top: 14px;
+  font-size: 11px; color: var(--text-muted);
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
+}
+.quote-author a {
+  color: var(--text); text-decoration: none;
+  font-weight: 700;
+  transition: color 0.2s;
+}
+.quote-author a:hover { color: var(--red); }
+
 /* -- card -- */
 .card {
   background: var(--bg-card); border: 1px solid var(--border);
@@ -360,9 +383,11 @@ body:not(.loading) main { opacity: 1; transform: translateY(0); }
 .btn-text:hover { color: var(--text); }
 .btn-text.danger:hover { color: var(--red); }
 
-/* scratchpad textarea */
+/* scratchpad: card grows to match the 3d card, textarea fills the space */
+.scratch-card { display: flex; flex-direction: column; }
+
 #scratchpad {
-  width: 100%; height: 180px;
+  width: 100%; flex: 1; min-height: 180px;
   background: var(--bg-sub); border: 1px solid var(--border);
   border-radius: 4px; padding: 12px;
   font-family: var(--font-mono); font-size: 12px; line-height: 1.6;
@@ -403,6 +428,12 @@ body:not(.loading) main { opacity: 1; transform: translateY(0); }
 /* page end marker */
 .page-end {
   display: flex; justify-content: center; padding: 40px 0;
+}
+
+/* low-contrast footer text, matches the date label styling */
+.page-end-text {
+  font-size: 12px; color: var(--text-muted);
+  letter-spacing: 0.04em;
 }
 
 /* -- buttons -- */
