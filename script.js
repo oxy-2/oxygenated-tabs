@@ -29,7 +29,7 @@ const state = {
   theme: localStorage.getItem('oxy_theme') || 'light',
   clock24h: localStorage.getItem('oxy_clock_24h') !== 'false',
   showSeconds: localStorage.getItem('oxy_show_seconds') !== 'false',
-  searchEngine: 'google', // google, wikipedia, duckduckgo, github, youtube
+  searchEngine: localStorage.getItem('oxy_engine') || 'google', // google, wikipedia, duckduckgo, github, youtube
   bgBaseOpacity: parseFloat(localStorage.getItem('oxy_bg_base')) || 0.22,
   bgHoverOpacity: parseFloat(localStorage.getItem('oxy_bg_hover')) || 0.85,
   bgSpacing: parseInt(localStorage.getItem('oxy_bg_spacing')) || 24,
@@ -299,6 +299,7 @@ let updateBgConfig = () => { };
   function setEngine(engineKey) {
     if (!engineUrls[engineKey]) return;
     state.searchEngine = engineKey;
+    localStorage.setItem('oxy_engine', engineKey); // remember the pick across reloads
     engineTags.forEach(tag => {
       if (tag.dataset.engine === engineKey) {
         tag.classList.add('active');
@@ -315,6 +316,8 @@ let updateBgConfig = () => { };
       if (searchInput) searchInput.focus();
     });
   });
+
+  setEngine(state.searchEngine); // reflect the saved engine on load
 
   function performSearch() {
     if (!searchInput) return;
