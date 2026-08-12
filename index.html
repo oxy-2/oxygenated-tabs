@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- title text -->
   <title>oxygenated</title>
   <meta name="description" content="a personal new tab page">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- fonts: JetBrains Mono for main text, Space Grotesk for thick text or titles -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <!-- apply saved theme before first paint -->
   <script>
@@ -16,39 +21,46 @@
       document.documentElement.setAttribute('data-theme', 'dark');
   </script>
 </head>
+
 <body class="loading">
 
-  <!-- loader: diagonal dot wave that fades out (no retract) -->
+  <!-- loading screen -->
   <div class="loader-overlay" id="loader-overlay">
     <canvas id="loader-wave-canvas"></canvas>
     <div class="loader-center">
+      <!-- welcome. text on loading screen -->
       <span class="loader-text">welcome.</span>
     </div>
   </div>
 
-  <!-- interactive dot matrix background -->
+  <!-- background canvas dot matrix -->
   <canvas id="dot-matrix-canvas"></canvas>
 
-  <!-- floating top elements (no header bar) -->
+  <!-- things pinned to top corners like settings and about me button -->
   <div class="top-bar">
     <a href="https://oxygenated.uk" class="about-pill" target="_blank" rel="noopener">
       <span class="red-dot"></span>
       about me
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 17L17 7M17 7H7M17 7v10" />
+      </svg>
     </a>
     <button class="settings-btn" id="settings-toggle" aria-label="settings">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.38.67 1.08 1.1 1.85 1.15H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.38.67 1.08 1.1 1.85 1.15H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
       </svg>
     </button>
   </div>
 
-  <!-- main content -->
+  <!-- main content (seperated by the little lines, might get rid of them, not sure) -->
   <main>
     <div class="container">
 
-      <!-- clock + date -->
+      <!-- clock and date and utc offsets -->
       <section class="hero">
         <span class="tz-label" id="tz-display">utc+00:00</span>
         <div class="clock-row">
@@ -58,16 +70,20 @@
         <span class="date-label" id="date-display">loading...</span>
       </section>
 
-      <!-- search -->
+      <!-- search bar -->
       <section class="search-section">
         <div class="search-box">
           <span class="search-prefix" id="search-badge">g:</span>
-          <input type="text" id="search-input" placeholder="search or type a url..." autocomplete="off" spellcheck="false">
+          <input type="text" id="search-input" placeholder="search or type a url..." autocomplete="off"
+            spellcheck="false">
           <kbd class="search-kbd">/</kbd>
           <button class="search-go" id="search-btn" aria-label="search">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
+        <!-- engine switcher pills -->
         <div class="engine-tags">
           <button class="engine-tag active" data-engine="google" data-prefix="g:">google</button>
           <button class="engine-tag" data-engine="duckduckgo" data-prefix="ddg:">duckduckgo</button>
@@ -77,7 +93,7 @@
         </div>
       </section>
 
-      <!-- shortcuts -->
+      <!-- shortcuts / quick links -->
       <section class="section" id="section-shortcuts">
         <div class="section-head">
           <div class="section-label"><span class="red-dot"></span> shortcuts</div>
@@ -86,7 +102,7 @@
         <div class="shortcuts-grid" id="shortcuts-grid"></div>
       </section>
 
-      <!-- daily quote -->
+      <!-- daily quote, pulled from api -->
       <section class="section" id="section-quote">
         <div class="card quote-card">
           <div class="card-head">
@@ -102,11 +118,11 @@
         </div>
       </section>
 
-      <!-- widgets: scratchpad + 3d viewport -->
+      <!-- widgets like side by side things and on mobile it stacks -->
       <section class="section">
         <div class="widgets-grid">
 
-          <!-- scratchpad -->
+          <!-- scratchpad like for notes and allat -->
           <div class="card scratch-card">
             <div class="card-head">
               <span class="card-label"><span class="red-dot"></span> scratchpad</span>
@@ -118,7 +134,7 @@
             <textarea id="scratchpad" placeholder="notes, ideas, whatever..."></textarea>
           </div>
 
-          <!-- 3d viewport -->
+          <!-- 3d viewport thingy -->
           <div class="card">
             <div class="card-head">
               <span class="card-label"><span class="red-dot"></span> 3d viewport</span>
@@ -137,13 +153,13 @@
         </div>
       </section>
 
-      <!-- page end -->
+      <!-- bottom like footer with my little signature -->
       <div class="page-end"><span class="page-end-text">made with love [oxy.]</span></div>
 
     </div>
   </main>
 
-  <!-- add shortcut modal -->
+  <!-- add shortcut stuff like menu and such -->
   <div class="modal-bg" id="shortcut-modal">
     <div class="modal">
       <div class="modal-head">
@@ -171,26 +187,28 @@
     </div>
   </div>
 
-  <!-- settings drawer (slides from right) -->
+  <!-- settings panel that slides out on the right -->
   <div class="drawer-bg" id="drawer-bg"></div>
   <aside class="drawer" id="settings-drawer">
     <div class="drawer-head">
-      <span>settings</span>
+      <span>settings (make look different)</span>
       <button class="modal-x" id="close-drawer">&times;</button>
     </div>
-
+    <!-- dot ocipacity like for changing how much of a highlight the mouse hover has -->
     <div class="setting-group">
       <label>dot contrast</label>
       <div class="setting-opts" id="contrast-opts">
-        <button class="opt active" data-base="0.22" data-hover="0.85">high</button>
-        <button class="opt" data-base="0.35" data-hover="0.95">ultra</button>
-        <button class="opt" data-base="0.12" data-hover="0.55">subtle</button>
+        <button class="opt" data-base="0.12" data-hover="0.55">low</button>
+        <button class="opt active" data-base="0.16" data-hover="0.65">normal</button>
+        <button class="opt" data-base="0.22" data-hover="0.85">high</button>
+        <button class="opt" data-base="0.35" data-hover="0.95">higher</button>
       </div>
     </div>
 
     <div class="setting-group">
       <label>dot spacing</label>
       <div class="setting-opts" id="spacing-opts">
+        <button class="opt" data-spacing="10">alot</button>
         <button class="opt" data-spacing="18">dense</button>
         <button class="opt active" data-spacing="24">balanced</button>
         <button class="opt" data-spacing="32">sparse</button>
@@ -200,32 +218,33 @@
     <div class="setting-group">
       <label>clock format</label>
       <div class="setting-opts">
-        <button class="opt active" id="btn-24h">24h</button>
-        <button class="opt" id="btn-12h">12h</button>
+        <button class="opt active" id="btn-24h">24h (military)</button>
+        <button class="opt" id="btn-12h">12h (am/pm)</button>
       </div>
     </div>
 
     <div class="setting-group">
       <label>seconds</label>
       <div class="setting-opts">
-        <button class="opt active" id="btn-seconds-on">on</button>
-        <button class="opt" id="btn-seconds-off">off</button>
+        <button class="opt" id="btn-seconds-on">on</button>
+        <button class="opt active" id="btn-seconds-off">off</button>
       </div>
     </div>
 
     <div class="setting-group">
       <label>theme</label>
       <div class="setting-opts">
-        <button class="opt active" id="btn-light">light</button>
-        <button class="opt" id="btn-dark">dark</button>
+        <button class="opt" id="btn-light">light ("retina removal" -johntarkov)</button>
+        <button class="opt active" id="btn-dark">dark ("kinda pretty" -me)</button>
       </div>
     </div>
 
     <div class="setting-group">
-      <button class="btn-text danger" id="reset-shortcuts-btn">reset shortcuts</button>
+      <button class="btn-text danger" id="reset-shortcuts-btn">reset all the shortcuts</button>
     </div>
   </aside>
 
   <script src="script.js"></script>
 </body>
+
 </html>

@@ -1,15 +1,30 @@
-/* OXYGENATED NEW TAB // HIGH-CONTRAST MATRIX ENGINE */
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║                                                                      ║
+   ║     ██                  ██                  ██                       ║ 
+   ║     ██                  ██                  ██                       ║
+   ║     ██████     ███ █    ██████     ███ █    ██████     ███ █         ║
+   ║     ██   ██  ██  ███    ██   ██  ██  ███    ██   ██  ██  ███         ║
+   ║     ██   ██    ███ █    ██   ██    ███ █    ██   ██    ███ █         ║
+   ║                                                                      ║
+   ║      "laughs very evily"                                             ║
+   ║       -oxy                                                           ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+
 'use strict';
+
+// little helper goobs to fetch things
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
-/* theme lives on <html> so the loader matches before first paint */
+// themes
+
 const applyTheme = (theme) => {
   document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
 };
 
-/* App State */
+// big local state save guy to save all the stuff the user set
+
 const state = {
   theme: localStorage.getItem('oxy_theme') || 'light',
   clock24h: localStorage.getItem('oxy_clock_24h') !== 'false',
@@ -32,12 +47,14 @@ const state = {
 
 applyTheme(state.theme);
 
-/* ── 1. LOADER: diagonal dot wave sweeps down, then fades out (no retract) ── */
+// entrace welcome and wave loader thingy (note to self use this for my future sites its way better)
+
 (function initLoader() {
   const overlay = $('#loader-overlay');
   const canvas = $('#loader-wave-canvas');
   if (!overlay || !canvas) return;
 
+  // ctx is used to like paint or like make everything on the site ctx.arc(), ctx.fill(), etc
   const ctx = canvas.getContext('2d');
   const SPACING = 20;
 
@@ -46,6 +63,7 @@ applyTheme(state.theme);
   let isLoaded = false;
   let fading = false;
 
+  // measures on every window and resizes so the grid always fills the screen
   function size() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
@@ -59,6 +77,7 @@ applyTheme(state.theme);
   window.addEventListener('load', () => { isLoaded = true; });
   setTimeout(() => { isLoaded = true; }, 600);
 
+  // isDark() asks the <html> tag which theme is active, the canvas cant use css vars afaik so it asks each frame
   const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
 
   function render() {
@@ -67,7 +86,7 @@ applyTheme(state.theme);
 
     ctx.clearRect(0, 0, width, height);
 
-    // the wave only goes down; once it reaches the end it fades away
+    // wave only moves one way, its diff from my personal site but i will update my personal site to be the same as this cuz its so much cleaner tho
     if (!fading) {
       waveFront += 1.6;
       if (waveFront >= maxDiag) {
@@ -83,7 +102,7 @@ applyTheme(state.theme);
       }
     }
 
-    // fill in the grid of dots behind the wave front
+    // draw tailing dots, deeper dots grow larger and more opaque for sweep effect
     const rgb = isDark() ? '255, 255, 255' : '17, 17, 17';
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
@@ -99,6 +118,7 @@ applyTheme(state.theme);
       }
     }
 
+    // requestAnimationFrame is what actually animates and does frames for everything it should be 60fps but changes if u have battery saver, a high refresh rate monitor etc
     requestAnimationFrame(render);
   }
 
@@ -106,8 +126,11 @@ applyTheme(state.theme);
   render();
 })();
 
-/* ── 2. DOT MATRIX BACKGROUND (reacts to mouse) ─────────────── */
-let updateBgConfig = () => {};
+// my beloved dot matrix background, its one of my favorite like design thingies, for my school project i really wanna do it but like with like
+// with frosted glass ontop kidna look and then crisp full cards hovering above, gosh that will be so pretty
+
+
+let updateBgConfig = () => { };
 
 (function initDotMatrix() {
   const canvas = $('#dot-matrix-canvas');
@@ -124,6 +147,8 @@ let updateBgConfig = () => {};
 
   const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
 
+  // build a flat list of all the dots once, then only redraw them, each dot stores its position + a random `phase` used to make the ambient pulse
+  // feel organic instead of lock step
   function resize() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
@@ -165,8 +190,9 @@ let updateBgConfig = () => {};
       let proximityFactor = 0;
 
       if (dist < INFLUENCE_DIST) {
+        // proximityFactor goes 1 (on your cursor) down to 0 (at the edge), squaring it (x*x) makes the falloff feel curved, not linear
         proximityFactor = 1 - dist / INFLUENCE_DIST;
-        // quadratic easing for a crisp expansion
+        // quadratic easing for a crisp expansion (im feeling pretty square today, like in a good way yk)
         targetR = BASE_RADIUS + (MAX_RADIUS - BASE_RADIUS) * proximityFactor * proximityFactor;
       }
 
@@ -174,6 +200,9 @@ let updateBgConfig = () => {};
       targetR += Math.sin(dot.phase + time) * 0.2;
       dot.radius += (targetR - dot.radius) * 0.15;
 
+      //dot.radius += (target - current) * 0.15, this is called larping get it like linear interpolation, yeah mb
+      //anyways so instead of jumping to the target size, the dot moves like 15% (or 3/20ths for you fraction freaks)
+      // of the way each frame, which makes the motion smooth, opacity blends between the base setting and the hover setting
       const opacity = state.bgBaseOpacity + (state.bgHoverOpacity - state.bgBaseOpacity) * (proximityFactor * proximityFactor);
 
       ctx.beginPath();
@@ -185,7 +214,7 @@ let updateBgConfig = () => {};
     requestAnimationFrame(render);
   }
 
-  // called when contrast/spacing changes in settings
+  // gets called for contrast and spacing changes in settings menu
   updateBgConfig = () => resize();
 
   window.addEventListener('resize', resize);
@@ -193,7 +222,8 @@ let updateBgConfig = () => {};
   render();
 })();
 
-/* ── 3. CLOCK (with timezone + 12/24h) & SEARCH ────────────── */
+// clock + search and uh utc offset and allat jazz, im actually listening to every breath u take, pretty sure thats jazz
+
 (function initClockAndSearch() {
   const clockEl = $('#clock-display');
   const periodEl = $('#clock-period');
@@ -210,6 +240,7 @@ let updateBgConfig = () => {};
       if (periodEl) periodEl.textContent = '';
       if (clockEl) clockEl.textContent = formatTime(hours, minutes);
     } else {
+      // 12 hour mode, its just time % 12, but 0%12=0, midnight is supposed to be 12 so we add || 12 as a fix
       const ampm = hours >= 12 ? 'pm' : 'am';
       hours = hours % 12 || 12;
       if (periodEl) periodEl.textContent = ampm;
@@ -227,6 +258,7 @@ let updateBgConfig = () => {};
       dateEl.textContent = now.toLocaleDateString('en-US', options).toLowerCase();
     }
 
+    // utc offset math is getTimezoneOffset() but it returns mins, but in the opposite sign so -now.getTimezoneOffset() flips it, then we split into hours + minutes so like utc+05:30 reads naturally
     if (tzEl) {
       const offset = -now.getTimezoneOffset();
       const sign = offset >= 0 ? '+' : '-';
@@ -239,7 +271,8 @@ let updateBgConfig = () => {};
   setInterval(updateClock, 1000);
   updateClock();
 
-  /* search */
+  // search bar for searching things
+
   const searchInput = $('#search-input');
   const searchBtn = $('#search-btn');
   const engineBadge = $('#search-badge');
@@ -261,6 +294,7 @@ let updateBgConfig = () => {};
     'w:': 'wikipedia'
   };
 
+  // setEngine(engineKey) highlights the matching tag button + swaps the little badge text at the left of the search box so things all match up
   function setEngine(engineKey) {
     if (!engineUrls[engineKey]) return;
     state.searchEngine = engineKey;
@@ -327,7 +361,7 @@ let updateBgConfig = () => {};
     });
   }
 
-  // '/' focuses search, 1-9 opens shortcuts, alt+s toggles settings
+  // keyboard shortcuts like 1-9 to open shortcuts, i might remove this cuz a first was tryna type in scratch pad and like couldnt put numbers without getting sent to narnia
   window.addEventListener('keydown', (e) => {
     const isEditing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
 
@@ -351,7 +385,16 @@ let updateBgConfig = () => {};
   });
 })();
 
-/* ── 4. SHORTCUTS GRID ─────────────────────────────────────── */
+
+
+   // shortcut cards
+
+   // rendershortcuts wipes the grid n rebuilds one card for every shortcut stored in state.shortcuts
+   // render shortcuts creates an <a> tag, which navigates by default
+   // del btn calls preventdefault to stop navigation
+   // new shortcuts are added via modal form in index.html
+   // everything is saved with localStorage so grid survives reloads
+
 (function initShortcuts() {
   const container = $('#shortcuts-grid');
   const addBtn = $('#add-shortcut-btn');
@@ -360,6 +403,7 @@ let updateBgConfig = () => {};
   const cancelBtn = $('#cancel-shortcut-btn');
   const form = $('#shortcut-form');
 
+  // new URL(url) is the browser's built-in URL parser, used it to pull out just the hostname so the card can show github.com under the title instead of a long ahh url. 
   function cleanDomain(url) {
     try {
       return new URL(url).hostname.replace('www.', '');
@@ -381,7 +425,7 @@ let updateBgConfig = () => {};
       card.href = item.url;
       card.className = 'shortcut-card';
 
-      // icon top-left, info bottom-left, key badge bottom-right, delete top-right
+      // icon top left, info bottom left, key badge bottom right, delete top right
       card.innerHTML = `
         <div class="shortcut-icon">${item.icon || item.title.substring(0, 2).toLowerCase()}</div>
         <div class="shortcut-bottom">
@@ -392,7 +436,7 @@ let updateBgConfig = () => {};
         <button class="shortcut-del" data-id="${item.id}" title="remove shortcut">&times;</button>
       `;
 
-      // delete without triggering navigation
+      // remake card on state change re render
       const delBtn = card.querySelector('.shortcut-del');
       delBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -413,7 +457,7 @@ let updateBgConfig = () => {};
   if (closeBtn) closeBtn.addEventListener('click', closeModal);
   if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
-  // click outside or press escape to close
+  // listening to 'click' on the background, if the click directly hit the overlay (not a child), close the modal like click outside to dismiss
   if (modal) {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
@@ -425,17 +469,18 @@ let updateBgConfig = () => {};
 
   if (form) {
     form.addEventListener('submit', (e) => {
-      e.preventDefault();
+      e.preventDefault(); // stop page refresh
       const title = $('#shortcut-name').value.trim();
       let url = $('#shortcut-url').value.trim();
       const key = $('#shortcut-key').value.trim();
 
+      // adds https cuz like i know no one actually writes out links with http lmao
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         url = 'https://' + url;
       }
 
       state.shortcuts.push({
-        id: Date.now().toString(),
+        id: Date.now().toString(), // uid for delete to identify correctly
         title,
         url,
         key: key ? key.substring(0, 1) : '',
@@ -452,7 +497,9 @@ let updateBgConfig = () => {};
   renderShortcuts();
 })();
 
-/* ── 5. SCRATCHPAD (saves automatically) ────────────────────── */
+// so scratchpad can read and write to local storage but the writes are on keypress and also char counter
+// im not sure if i wanna fix this cuz rn its autosave on key so its like less efficent for battery on big ammlunts of text but i doubt it will be an issue yk
+
 (function initScratchpad() {
   const textarea = $('#scratchpad');
   const countEl = $('#scratch-count');
@@ -480,7 +527,38 @@ let updateBgConfig = () => {};
   }
 })();
 
-/* ── 6. 3D INTERACTIVE WIREFRAME VIEWPORT ───────────────────── */
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║    6 ── 3D WIREFRAME VIEWPORT                                         ║
+   ║    (the rotating wire shape you can drag)                             ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+
+/* ──────────────────────────────────────────────────────────────────────────
+   WHAT IS GOING ON HERE? THE SHORT VERSION:
+   • We don't use a 3D library. It's hand-built math on a 2D canvas.
+   • `vertices` is a big list of points {x, y, z} in 3D space.
+   • Every frame we ROTATE those points (math below) and then FLATTEN them
+     into 2D screen coordinates using a simple cube-not-a-camera projection.
+     (scale = fov / (fov + depth) is the same trick 3D games use: things
+     that are far away look smaller.)
+   • Dragging sets targetRotX/targetRotY; the rotation LERP-towards them,
+     and when you let go it slowly spins on its own (targetRotY += 0.008).
+
+   THE GEOMETRY FACTORIES:
+   • "icosahedron": 12 classic vertices + dots sprinkled along the edges.
+     Have you seen the "golden ratio" (1 + √5)/2? These are its 12 corners.
+   • "heart": a famous heart formula — with 3 slices of depth to make it
+     volumetric.
+   • "cube": every 3D lattice point on the surface of a 3x3x3 cube.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* ★ PERSONALIZE ★
+   • the * 32 and * 40 scalars in generateGeometry control shape SIZE.
+   • rotY += 0.008  → the auto-spin speed while you are NOT dragging.
+   • fov = 240 and the +180 depth offset tune the "camera lens" feel.
+   • the 3 modes cycle icosahedron → heart → cube → loop. You can add a 4th
+     by adding an else-if branch + a factory.
+   ────────────────────────────────────────────────────────────────────────── */
+
 (function init3DCAD() {
   const canvas = $('#cad-3d-canvas');
   const coordsEl = $('#cad-coords');
@@ -496,7 +574,7 @@ let updateBgConfig = () => {};
   const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
 
   function generateGeometry() {
-    vertices = [];
+    vertices = []; // isosahedron one, done with math but like vectors lol
     if (mode === 'icosahedron') {
       const phi = (1 + Math.sqrt(5)) / 2;
       const raw = [
@@ -512,6 +590,8 @@ let updateBgConfig = () => {};
         for (let j = i + 1; j < raw.length; j++) {
           const dist = Math.hypot(raw[i][0] - raw[j][0], raw[i][1] - raw[j][1], raw[i][2] - raw[j][2]);
           if (dist < 2.3) {
+            /* dist < 2.3 is how we know two corners are neighbors
+                  distance in 3d is the same as 3d pythag so math.hypot(x, y, z) works the same way */
             for (let t = 0.2; t < 1; t += 0.2) {
               vertices.push({
                 x: (raw[i][0] + (raw[j][0] - raw[i][0]) * t) * 32,
@@ -521,20 +601,24 @@ let updateBgConfig = () => {};
             }
           }
         }
-      }
+      }   // the heart one
     } else if (mode === 'heart') {
       const thicknesses = [-12, 0, 12];
       thicknesses.forEach(zOffset => {
         for (let angle = 0; angle < Math.PI * 2; angle += 0.15) {
+          /* heart math stuff:
+                x = 16·sin³(t)  and  y = -(13·cos t - 5·cos 2t - 2·cos 3t - cos 4t)
+                the minus in front of y flips it so the heart points upwards */
           const x = 16 * Math.pow(Math.sin(angle), 3);
           const y = -(13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle));
           vertices.push({ x: x * 3.8, y: y * 3.8, z: zOffset });
         }
       });
-    } else { // cube
+    } else { // the cube, done with math like the heart
       for (let x = -1; x <= 1; x += 0.5) {
         for (let y = -1; y <= 1; y += 0.5) {
           for (let z = -1; z <= 1; z += 0.5) {
+            /* math.abs is used for like checking distance from zero so the inside of the is empty */
             if (Math.abs(x) === 1 || Math.abs(y) === 1 || Math.abs(z) === 1) {
               vertices.push({ x: x * 40, y: y * 40, z: z * 40 });
             }
@@ -556,6 +640,11 @@ let updateBgConfig = () => {};
     });
   }
 
+  /* dragging controls for the 3d object, lowk most of this is just borrowed from my personal site
+        1. mousedown on the canvas -> start dragging, remember last mouse pos
+        2. mousemove on the window -> add the mouse movement to the targets
+        3. mouseup on the window -> stop dragging
+        also mousemove and mouseup are on window, so they work even if you drag outside of the canvas which makes it feel nicer  */
   let rotX = 0.2, rotY = 0.4;
   let targetRotX = 0.2, targetRotY = 0.4;
   let isDragging = false;
@@ -581,6 +670,7 @@ let updateBgConfig = () => {};
   function render3D() {
     if (!isDragging) targetRotY += 0.008;
 
+    /* smooth dragging to make it not snap to cursor when dragging */
     rotX += (targetRotX - rotX) * 0.1;
     rotY += (targetRotY - rotY) * 0.1;
 
@@ -588,6 +678,11 @@ let updateBgConfig = () => {};
 
     ctx.clearRect(0, 0, w, h);
 
+    /* projection math to make pretty 2d kinda thang
+         first rot y, then x using cosin / sine like trigonometry
+         secondly, scale = fov / (fov + z2 + 180) => far or like smaller
+         thirdly, px = center + rotatedX * scale   (same for Y)
+         so dots with a higher scale will be brighter and bigger => depth cue */
     const cx = w / 2, cy = h / 2, fov = 240;
     const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
     const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
@@ -618,7 +713,33 @@ let updateBgConfig = () => {};
   render3D();
 })();
 
-/* ── 7. DAILY QUOTE WIDGET (quote + wikipedia link) ────────── */
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║    7 ── DAILY QUOTE                                                   ║
+   ║    (a random quote + a link to the author on wikipedia)               ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+
+/* ──────────────────────────────────────────────────────────────────────────
+   HOW IT WORKS:
+   • loadQuote() is an ASYNC function: it awaits a fetch() to an API that
+     returns a random quote. "await" literally pauses the function until
+     the internet answers (or fails).
+   • If fetch throws an error (offline, blocked, whatever) we catch it and
+     pick a random quote from the built-in `fallbacks` list — so the box
+     is NEVER empty. This is called a "graceful fallback".
+   • render() applies clean sentence-casing and builds the wikipedia link
+     from the author's name.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* ★ PERSONALIZE ★ — YOUR OWN QUOTES, YOUR OWN FLAVOR ★
+   ──────────────────────────────────────────────────────────────────────────
+   • Add YOUR favourite lines to the fallbacks array! They are shown when
+     you're offline, and they keep the vibe YOU want.
+   • The quote API is dummyjson.com — swap it for another API by changing
+     the URL in fetch() (zenquotes.io, api.quotable.io...) if you like.
+   • toSentenceCase() lowercases everything then floats the first letter
+     and the word "I" — DELETE this if you'd rather keep the author's caps.
+   ────────────────────────────────────────────────────────────────────────── */
+
 (function initQuote() {
   const quoteEl = $('#quote-text');
   const authorEl = $('#quote-author');
@@ -627,8 +748,8 @@ let updateBgConfig = () => {};
   const refreshBtn = $('#quote-refresh');
   if (!quoteEl) return;
 
-  // built-in fallbacks so the box is never empty, even offline
-  // (these keep a short description; api quotes show quote + author only)
+  // fallback incase it dont work as it should or sum
+  // might remove the description later but whatever for now
   const fallbacks = [
     { quote: 'the unexamined life is not worth living.', author: 'Socrates', desc: 'classical greek philosopher, one of the founders of western philosophy.' },
     { quote: 'whatever you can do, or dream you can, begin it. boldness has genius, power, and magic in it.', author: 'Johann Wolfgang von Goethe', desc: 'german writer and statesman, author of faust.' },
@@ -636,11 +757,10 @@ let updateBgConfig = () => {};
     { quote: 'be yourself; everyone else is already taken.', author: 'Oscar Wilde', desc: 'irish poet and playwright.' }
   ];
 
-  // always link to wikipedia with the full name
+  // link to wikipedia on top of name like same way wiki search works 
   const wikiUrl = (name) => 'https://en.wikipedia.org/wiki/' + encodeURIComponent(name).replace(/%20/g, '_');
 
-  // clean the quote casing: lower everything, then re-capitalize
-  // only valid spots (start, after sentence end, the pronoun "i")
+  // make quote look clean to avoid the dreaded Don'T 
   function toSentenceCase(text) {
     return text
       .toLowerCase()
@@ -682,8 +802,27 @@ let updateBgConfig = () => {};
   loadQuote();
 })();
 
-/* ── 8. SETTINGS DRAWER ────────────────────────────────────── */
-let toggleSettings = () => {};
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║    8 ── SETTINGS DRAWER                                                ║
+   ║    (the sliding panel from the right)                                  ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+
+/* ──────────────────────────────────────────────────────────────────────────
+   THE GRAND PATTERN YOU WILL SEE ~10 TIMES IN HERE:
+      button.addEventListener('click', () => {
+        1. change the setting in `state`
+        2. save it to localStorage (so it survives reloads)
+        3. flip the .active class so the picked button looks chosen
+      })
+
+   >>> ABOUT `updateBgConfig` and `toggleSettings`:
+        Both were declared as empty functions near the top of this file.
+        Other sections REPLACE them with real implementations. Because the
+        settings section lives here (last), it is allowed to CALL them
+        freely. That is the "bridge" between features. 
+   ────────────────────────────────────────────────────────────────────────── */
+
+let toggleSettings = () => { };
 
 (function initSettings() {
   const toggleBtn = $('#settings-toggle');
@@ -700,7 +839,8 @@ let toggleSettings = () => {};
   const btnDark = $('#btn-dark');
   const resetShortcutsBtn = $('#reset-shortcuts-btn');
 
-  // reflect saved choices on the selected option buttons
+  /* load saved state for all the stuff on the site like the scratchpad, menu, theme, etc. */
+  // also selected option buttons and allat
   contrastOpts.forEach(o => {
     o.classList.toggle('active', parseFloat(o.dataset.base) === state.bgBaseOpacity);
   });
@@ -714,7 +854,7 @@ let toggleSettings = () => {};
   if (btnLight) btnLight.classList.toggle('active', state.theme !== 'dark');
   if (btnDark) btnDark.classList.toggle('active', state.theme === 'dark');
 
-  // open / close the drawer
+  // open or close settings menu
   toggleSettings = () => {
     if (!drawer) return;
     const open = drawer.classList.toggle('open');
@@ -732,7 +872,7 @@ let toggleSettings = () => {};
     if (e.key === 'Escape' && drawer && drawer.classList.contains('open')) toggleSettings();
   });
 
-  // dot contrast
+  // contrast for dots in bkg
   contrastOpts.forEach(btn => {
     btn.addEventListener('click', () => {
       state.bgBaseOpacity = parseFloat(btn.dataset.base);
@@ -744,7 +884,7 @@ let toggleSettings = () => {};
     });
   });
 
-  // dot spacing
+  // spacing for dots in bkg
   spacingOpts.forEach(btn => {
     btn.addEventListener('click', () => {
       state.bgSpacing = parseInt(btn.dataset.spacing, 10);
@@ -754,7 +894,7 @@ let toggleSettings = () => {};
     });
   });
 
-  // clock format
+  // military or am/pm clock toggle
   if (btn24h && btn12h) {
     btn24h.addEventListener('click', () => {
       state.clock24h = true;
@@ -770,7 +910,7 @@ let toggleSettings = () => {};
     });
   }
 
-  // clock seconds
+  // clock seconds toggle
   if (btnSecOn && btnSecOff) {
     btnSecOn.addEventListener('click', () => {
       state.showSeconds = true;
@@ -786,7 +926,7 @@ let toggleSettings = () => {};
     });
   }
 
-  // theme
+  // theme selector code
   if (btnLight && btnDark) {
     btnLight.addEventListener('click', () => {
       state.theme = 'light';
@@ -804,7 +944,7 @@ let toggleSettings = () => {};
     });
   }
 
-  // reset shortcuts
+  // reset for shortcuts
   if (resetShortcutsBtn) {
     resetShortcutsBtn.addEventListener('click', () => {
       if (confirm('reset shortcuts to default?')) {
@@ -814,3 +954,144 @@ let toggleSettings = () => {};
     });
   }
 })();
+
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║    NEW FEATURE TIME — PICK ONE, PASTE WHERE IT BELONGS                ║
+   ║                                                                        ║
+   ║    Below are 3 easy additions, each written as a complete little       ║
+   ║    module. COPY the block, PASTE it near the matching section, then    ║
+   ║    add the 2-3 lines of HTML (and tiny bit of CSS if you want).        ║
+   ║    Everything is commented so you know EXACTLY where it plugs in.      ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+
+/* ── FEATURE A: TIME-OF-DAY GREETING (easiest one, zero HTML needed) ──────
+   ──────────────────────────────────────────────────────────────────────────
+   Shows "good morning" / "good afternoon" / "good evening" under the clock.
+   You can even personalise it with YOUR name: "good morning, rhime".
+
+   PASTE: just below the clock update block inside SECTION 3 (the clock
+   section) so the greeting refreshes with the clock each second.
+
+   HTML TO ADD  ← drop this into index.html, right under the
+                  date-display line, so the greeting sits above it:
+
+   <div class="date-label" id="greeting-display"></div>
+
+   ────────────────────────────────────────────────────────────────────────── */
+
+  /* ★ PERSONALIZE ★ — say YOUR name */ 
+  /*
+  const greetingEl = document.getElementById('greeting-display'); // the <div>
+  const YOUR_NAME = 'rhime'; // ← change this to your name (or '' for none)
+
+  function updateGreeting() {
+    const h = new Date().getHours();
+    let word;
+    if (h < 5)      word = 'night owl';            // midnight → 5am
+    else if (h < 12) word = 'good morning';        // 5am → noon
+    else if (h < 18) word = 'good afternoon';      // noon → 6pm
+    else            word = 'good evening';         // 6pm → midnight
+    if (greetingEl) greetingEl.textContent = YOUR_NAME
+      ? `${word}, ${YOUR_NAME}.`
+      : `${word}.`;
+  }
+  updateGreeting();
+  setInterval(updateGreeting, 60000); // re-check once a minute
+  */
+
+/* ── FEATURE B: TODO / TASKS LIST (built exactly like the scratchpad) ──────
+   ──────────────────────────────────────────────────────────────────────────
+   A tiny to-do list: type a task, press enter to add it, click to delete it.
+   It autosaves to localStorage with the exact same tricks as the scratchpad.
+
+   PASTE: as a brand-new section (copy a whole `(function(){...})()` shape),
+   anywhere between section 8 and here. Then add this HTML inside the
+   widgets-grid in index.html:
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-label"><span class="red-dot"></span> tasks</span>
+        </div>
+        <textarea id="todo-input" placeholder="add a task..."></textarea>
+        <ul id="todo-list"></ul>
+      </div>
+
+   ────────────────────────────────────────────────────────────────────────── */
+
+/*
+(function initTodo() {
+  const input = $('#todo-input');
+  const list = $('#todo-list');
+  if (!input || !list) return;
+
+  // load saved tasks: JSON.parse turns the saved text back into an array
+  let tasks = JSON.parse(localStorage.getItem('oxy_todos') || '[]');
+  const save = () => localStorage.setItem('oxy_todos', JSON.stringify(tasks));
+
+  function render() {
+    list.innerHTML = '';
+    tasks.forEach((task, i) => {
+      const li = document.createElement('li');
+      li.textContent = task;
+      li.classList.add('todo-item');
+      li.addEventListener('click', () => {        // click = delete
+        tasks.splice(i, 1);                       // remove from array
+        save();
+        render();
+      });
+      list.appendChild(li);
+    });
+  }
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && input.value.trim()) {
+      tasks.unshift(input.value.trim());          // add to FRONT of list
+      input.value = '';
+      save();
+      render();
+    }
+  });
+
+  render();
+})();
+*/
+
+/* ── FEATURE C: ACCENT COLOR PICKER (personalization on steroids) ──────────
+   ──────────────────────────────────────────────────────────────────────────
+   Every red accent on the page (the dots, the search glow, the "g:" badge)
+   comes from ONE CSS variable: --red. This feature lets the user pick any
+   colour, stores it, and the whole page restyles on the spot.
+
+   PASTE: as a new section anywhere after section 8. Then add to settings
+   drawer in index.html:
+
+      <div class="setting-group">
+        <label>accent color</label>
+        <input type="color" id="accent-picker" value="#ff2e2e">
+      </div>
+
+   ────────────────────────────────────────────────────────────────────────── */
+
+/*
+(function initAccent() {
+  const picker = $('#accent-picker');
+  if (!picker) return;
+
+  // load the saved colour, or fall back to the default oxy. red
+  picker.value = localStorage.getItem('oxy_accent') || '#ff2e2e';
+
+  picker.addEventListener('input', () => {
+    localStorage.setItem('oxy_accent', picker.value);
+    // overwriting the CSS variable instantly restyles the whole page
+    document.documentElement.style.setProperty('--red', picker.value);
+  });
+})();
+*/
+
+/*
+// SECOND PART: apply the saved accent BEFORE the paint so there's no
+// red flash. Paste this right after applyTheme(state.theme); near the
+// top of the file, next to the other theme line.
+document.documentElement.style.setProperty('--red',
+  localStorage.getItem('oxy_accent') || '#ff2e2e');
+*/
