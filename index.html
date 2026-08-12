@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- title text -->
-  <title>oxygenated</title>
+  <title>O. Tabs</title>
   <meta name="description" content="a personal new tab page">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <!-- fonts: JetBrains Mono for main text, Space Grotesk for thick text or titles -->
@@ -40,7 +40,7 @@
   <div class="top-bar">
     <a href="https://oxygenated.uk" class="about-pill" target="_blank" rel="noopener">
       <span class="red-dot"></span>
-      about me
+      more about me (oxy)
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
         stroke-linecap="round" stroke-linejoin="round">
         <path d="M7 17L17 7M17 7H7M17 7v10" />
@@ -73,7 +73,7 @@
       <!-- search bar -->
       <section class="search-section">
         <div class="search-box">
-          <span class="search-prefix" id="search-badge">g:</span>
+          <span class="search-prefix" id="search-badge">ggl:</span>
           <input type="text" id="search-input" placeholder="search or type a url..." autocomplete="off"
             spellcheck="false">
           <kbd class="search-kbd">/</kbd>
@@ -85,11 +85,11 @@
         </div>
         <!-- engine switcher pills -->
         <div class="engine-tags">
-          <button class="engine-tag active" data-engine="google" data-prefix="g:">google</button>
+          <button class="engine-tag active" data-engine="google" data-prefix="ggl:">google</button>
+          <button class="engine-tag" data-engine="wikipedia" data-prefix="wki:">wikipedia</button>
           <button class="engine-tag" data-engine="duckduckgo" data-prefix="ddg:">duckduckgo</button>
-          <button class="engine-tag" data-engine="github" data-prefix="gh:">github</button>
-          <button class="engine-tag" data-engine="youtube" data-prefix="yt:">youtube</button>
-          <button class="engine-tag" data-engine="wikipedia" data-prefix="w:">wikipedia</button>
+          <button class="engine-tag" data-engine="github" data-prefix="gth:">github</button>
+          <button class="engine-tag" data-engine="youtube" data-prefix="ytb:">youtube</button>
         </div>
       </section>
 
@@ -191,7 +191,7 @@
   <div class="drawer-bg" id="drawer-bg"></div>
   <aside class="drawer" id="settings-drawer">
     <div class="drawer-head">
-      <span>settings (make look different)</span>
+      <span>settings (make stuff different)</span>
       <button class="modal-x" id="close-drawer">&times;</button>
     </div>
     <!-- dot ocipacity like for changing how much of a highlight the mouse hover has -->
@@ -199,8 +199,8 @@
       <label>dot contrast</label>
       <div class="setting-opts" id="contrast-opts">
         <button class="opt" data-base="0.12" data-hover="0.55">low</button>
-        <button class="opt active" data-base="0.16" data-hover="0.65">normal</button>
-        <button class="opt" data-base="0.22" data-hover="0.85">high</button>
+        <button class="opt" data-base="0.16" data-hover="0.65">normal</button>
+        <button class="opt active" data-base="0.22" data-hover="0.85">high</button>
         <button class="opt" data-base="0.35" data-hover="0.95">higher</button>
       </div>
     </div>
@@ -209,8 +209,8 @@
       <label>dot spacing</label>
       <div class="setting-opts" id="spacing-opts">
         <button class="opt" data-spacing="10">alot</button>
-        <button class="opt" data-spacing="18">dense</button>
-        <button class="opt active" data-spacing="24">balanced</button>
+        <button class="opt active" data-spacing="18">dense</button>
+        <button class="opt" data-spacing="24">balanced</button>
         <button class="opt" data-spacing="32">sparse</button>
       </div>
     </div>

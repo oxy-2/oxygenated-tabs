@@ -29,7 +29,7 @@ const state = {
   theme: localStorage.getItem('oxy_theme') || 'light',
   clock24h: localStorage.getItem('oxy_clock_24h') !== 'false',
   showSeconds: localStorage.getItem('oxy_show_seconds') !== 'false',
-  searchEngine: 'google', // google, duckduckgo, github, youtube, wikipedia
+  searchEngine: 'google', // google, wikipedia, duckduckgo, github, youtube
   bgBaseOpacity: parseFloat(localStorage.getItem('oxy_bg_base')) || 0.22,
   bgHoverOpacity: parseFloat(localStorage.getItem('oxy_bg_hover')) || 0.85,
   bgSpacing: parseInt(localStorage.getItem('oxy_bg_spacing')) || 24,
@@ -280,18 +280,19 @@ let updateBgConfig = () => { };
 
   const engineUrls = {
     google: 'https://www.google.com/search?q=',
+    wikipedia: 'https://en.wikipedia.org/wiki/Special:Search?search=',
     duckduckgo: 'https://duckduckgo.com/?q=',
     github: 'https://github.com/search?q=',
-    youtube: 'https://www.youtube.com/results?search_query=',
-    wikipedia: 'https://en.wikipedia.org/wiki/Special:Search?search='
+    youtube: 'https://www.youtube.com/results?search_query='
+
   };
 
   const enginePrefixes = {
-    'g:': 'google',
+    'ggl:': 'google',
+    'wki:': 'wikipedia',
     'ddg:': 'duckduckgo',
-    'gh:': 'github',
-    'yt:': 'youtube',
-    'w:': 'wikipedia'
+    'gth:': 'github',
+    'ytb:': 'youtube'
   };
 
   // setEngine(engineKey) highlights the matching tag button + swaps the little badge text at the left of the search box so things all match up
